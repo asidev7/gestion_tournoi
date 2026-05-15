@@ -1,0 +1,62 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Score éliminatoire — Admin ADEIB{% endblock %}
+{% block page_title %}{{ match.get_round_display }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md">
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
+    <div class="text-center mb-3">
+      <span class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full text-white bg-black">
+        {{ match.get_round_display }}
+      </span>
+    </div>
+    <div class="grid grid-cols-3 items-center gap-3 text-center">
+      <div>
+        <div class="font-black text-sm">{{ match.home_team.name|default:"TBD" }}</div>
+      </div>
+      <div class="text-2xl font-black text-gray-900">
+        {{ match.home_score }} – {{ match.away_score }}
+      </div>
+      <div>
+        <div class="font-black text-sm">{{ match.away_team.name|default:"TBD" }}</div>
+      </div>
+    </div>
+    {% if match.home_penalties is not None %}
+    <div class="text-center text-xs text-gray-400 mt-2">(Tirs au but: {{ match.home_penalties }} – {{ match.away_penalties }})</div>
+    {% endif %}
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 p-6">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1.5">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="mt-1 text-xs text-gray-600">{{ field.errors|join:", " }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="flex gap-3 pt-2 border-t border-gray-100">
+        <button type="submit" class="flex-1 py-2.5 rounded-xl text-white text-sm font-bold bg-black">
+          <i class="fas fa-save mr-2"></i>Enregistrer
+        </button>
+        <a href="{% url 'bracket' %}" class="flex-1 py-2.5 rounded-xl text-gray-600 text-sm font-bold text-center bg-gray-100 hover:bg-gray-200 transition-colors">
+          Annuler
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  input[type=number], input[type=datetime-local], select {
+    display:block; width:100%; border:1px solid #e5e7eb; border-radius:10px;
+    padding:8px 12px; font-size:.875rem; outline:none; transition:border-color .15s;
+  }
+  input:focus, select:focus { border-color:#111111; box-shadow:0 0 0 2px rgba(17,17,17,.12); }
+  select { appearance:auto; }
+</style>
+{% endblock %}

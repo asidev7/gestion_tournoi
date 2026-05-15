@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}S'inscrire · ADEIB U26{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-4 py-10">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-gray-600 no-underline">&larr; Retour</a>
+    <h1 class="mt-4 text-2xl font-black text-gray-900">Inscription au tournoi</h1>
+    <p class="mt-1 text-sm text-gray-500">
+      Remplissez ce formulaire pour inscrire votre équipe au tournoi ADEIB U26
+      {% if tournament and tournament.edition %}{{ tournament.edition }}{% endif %}.
+    </p>
+  </div>
+
+  <!-- Infos paiement -->
+  <div class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6">
+    <p class="font-bold text-amber-800 text-sm">Frais d'inscription</p>
+    <p class="text-amber-700 text-sm mt-1">
+      Effectuez votre paiement via MTN Mobile Money ou Moov Money, puis prenez une capture d'écran ou photo de la confirmation à joindre ci-dessous.
+    </p>
+    {% if tournament and tournament.location %}
+    <p class="text-amber-600 text-xs mt-2"><strong>Lieu :</strong> {{ tournament.location }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Formulaire -->
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Nom de l'équipe <span class="text-red-500">*</span></label>
+        {{ form.team_name }}
+        {% if form.team_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.team_name.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Quartier / Village <span class="text-red-500">*</span></label>
+        {{ form.neighborhood }}
+        {% if form.neighborhood.errors %}<p class="text-red-500 text-xs mt-1">{{ form.neighborhood.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Nom du capitaine <span class="text-red-500">*</span></label>
+        {{ form.captain_name }}
+        {% if form.captain_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.captain_name.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Téléphone <span class="text-red-500">*</span></label>
+        {{ form.phone }}
+        {% if form.phone.errors %}<p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Email <span class="text-gray-400 font-normal">(optionnel)</span></label>
+        {{ form.email }}
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de joueurs <span class="text-red-500">*</span></label>
+        {{ form.player_count }}
+        {% if form.player_count.errors %}<p class="text-red-500 text-xs mt-1">{{ form.player_count.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-700 mb-1">
+        Preuve de paiement <span class="text-red-500">*</span>
+        <span class="text-gray-400 font-normal">(photo ou capture d'écran)</span>
+      </label>
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-green-500 transition-colors cursor-pointer" id="dropZone">
+        <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2 block"></i>
+        <p class="text-sm text-gray-500">Cliquez ou glissez votre image ici</p>
+        <p class="text-xs text-gray-400 mt-1">JPG, PNG — max 5 Mo</p>
+        <div class="mt-3">{{ form.payment_proof }}</div>
+        <div id="previewWrap" class="mt-3 hidden">
+          <img id="previewImg" class="max-h-32 mx-auto rounded-lg border border-gray-200" alt="Aperçu">
+        </div>
+      </div>
+      {% if form.payment_proof.errors %}<p class="text-red-500 text-xs mt-1">{{ form.payment_proof.errors.0 }}</p>{% endif %}
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-700 mb-1">Remarques <span class="text-gray-400 font-normal">(optionnel)</span></label>
+      {{ form.notes }}
+    </div>
+
+    <button type="submit" class="w-full text-white font-bold py-3 rounded-xl transition-opacity hover:opacity-90 text-sm" style="background:#0d5c2e">
+      Envoyer l'inscription
+    </button>
+  </form>
+
+</div>
+
+<script>
+  const input = document.querySelector('input[type="file"]');
+  const preview = document.getElementById('previewImg');
+  const previewWrap = document.getElementById('previewWrap');
+  input?.addEventListener('change', () => {
+    const file = input.files[0];
+    if (file && file.type.startsWith('image/')) {
+      preview.src = URL.createObjectURL(file);
+      previewWrap.classList.remove('hidden');
+    }
+  });
+</script>
+{% endblock %}

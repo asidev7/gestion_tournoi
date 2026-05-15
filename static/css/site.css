@@ -1,0 +1,26 @@
+:root { color-scheme: light; }
+
+html, body { height: 100%; }
+
+body {
+  background: #f8fafc;
+}
+
+/* Make Django forms look good without extra libs */
+label { display: block; margin-bottom: 0.25rem; font-weight: 600; color: #0f172a; }
+input, select, textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.6rem 0.8rem;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+form p { margin-bottom: 1rem; }
+helptext, .helptext { display: block; margin-top: 0.25rem; color: rgba(51, 65, 85, 0.9); font-size: 0.875rem; }
+ul.errorlist { margin: 0 0 0.75rem; padding: 0; list-style: none; }
+ul.errorlist li { color: #b91c1c; font-size: 0.875rem; }

@@ -1,0 +1,268 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Tableau de bord — Admin ADEIB{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 92, 46, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(13, 92, 46, 0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  border-color: #0d5c2e;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(13, 92, 46, 0.1);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.action-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.action-card:hover {
+  border-color: #0d5c2e;
+  background: #f0fdf4;
+  transform: translateY(-3px);
+}
+
+.match-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s ease;
+}
+
+.match-row:hover {
+  background: #f9fafb;
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: pulse-soft 2s infinite;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="w-full">
+
+  <!-- Tournament banner -->
+  {% if tournament %}
+  <div class="bg-gradient-to-r from-[#0d5c2e] to-[#094a24] rounded-2xl mb-8 p-6 text-white animate-slideUp">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl backdrop-blur-sm">
+          🏆
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold">{{ tournament.name }}</h2>
+          <p class="text-white/70">{{ tournament.edition }}{% if tournament.location %} · {{ tournament.location }}{% endif %}</p>
+          {% if tournament.start_date %}
+          <p class="text-white/50 text-sm mt-1">
+            <i class="fas fa-calendar-alt mr-1"></i>
+            {{ tournament.start_date|date:"d/m/Y" }}{% if tournament.end_date %} → {{ tournament.end_date|date:"d/m/Y" }}{% endif %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+      <a href="{% url 'admin_tournament_setup' %}" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center gap-2">
+        <i class="fas fa-cog"></i>Configurer
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-8 flex items-center gap-4 animate-slideUp">
+    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+      <i class="fas fa-exclamation-triangle text-amber-600 text-xl"></i>
+    </div>
+    <div class="flex-1">
+      <h3 class="font-bold text-amber-900">Aucun tournoi actif</h3>
+      <p class="text-amber-700 text-sm">Configurez un tournoi pour commencer.</p>
+    </div>
+    <a href="{% url 'admin_tournament_setup' %}" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
+      Configurer
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Stats grid -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.05s;">
+      <div class="stat-icon bg-blue-100 text-blue-600 mb-3">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.teams }}</div>
+      <div class="text-sm text-gray-500 font-medium">Équipes</div>
+    </div>
+
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.1s;">
+      <div class="stat-icon bg-green-100 text-green-600 mb-3">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.players }}</div>
+      <div class="text-sm text-gray-500 font-medium">Joueurs</div>
+    </div>
+
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.15s;">
+      <div class="stat-icon bg-amber-100 text-amber-600 mb-3">
+        <i class="fas fa-futbol"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.matches }}</div>
+      <div class="text-sm text-gray-500 font-medium">Matchs</div>
+    </div>
+
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.2s;">
+      <div class="stat-icon bg-red-100 text-red-600 mb-3">
+        <i class="fas fa-crosshairs"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.goals }}</div>
+      <div class="text-sm text-gray-500 font-medium">Buts</div>
+    </div>
+
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.25s;">
+      <div class="stat-icon bg-purple-100 text-purple-600 mb-3">
+        <i class="fas fa-circle text-xs"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.live_matches }}</div>
+      <div class="text-sm text-gray-500 font-medium">En direct</div>
+    </div>
+
+    <div class="stat-card animate-slideUp" style="animation-delay: 0.3s;">
+      <div class="stat-icon bg-gray-100 text-gray-600 mb-3">
+        <i class="fas fa-check"></i>
+      </div>
+      <div class="text-3xl font-black text-gray-900">{{ stats.finished }}</div>
+      <div class="text-sm text-gray-500 font-medium">Terminés</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+    <a href="{% url 'admin_add_team' %}" class="action-card animate-slideUp" style="animation-delay: 0.35s;">
+      <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">👥</div>
+      <div class="font-bold text-gray-700">Ajouter équipe</div>
+    </a>
+
+    <a href="{% url 'admin_add_match' %}" class="action-card animate-slideUp" style="animation-delay: 0.4s;">
+      <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">⚽</div>
+      <div class="font-bold text-gray-700">Ajouter match</div>
+    </a>
+
+    <a href="{% url 'admin_generate_matches' %}" class="action-card animate-slideUp" style="animation-delay: 0.45s;">
+      <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">🔄</div>
+      <div class="font-bold text-gray-700">Générer matchs</div>
+    </a>
+
+    <a href="{% url 'admin_generate_knockout' %}" class="action-card animate-slideUp" style="animation-delay: 0.5s;">
+      <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">🏆</div>
+      <div class="font-bold text-gray-700">Phase finale</div>
+    </a>
+
+    <a href="{% url 'admin_tickets' %}" class="action-card animate-slideUp" style="animation-delay: 0.55s;">
+      <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">🎫</div>
+      <div class="font-bold text-gray-700">Tickets</div>
+    </a>
+  </div>
+
+  <!-- Recent + Upcoming -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Recent results -->
+    <div class="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden animate-slideUp" style="animation-delay: 0.6s;">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-bold text-gray-900 flex items-center gap-2">
+          <i class="fas fa-history text-[#0d5c2e]"></i>
+          Résultats récents
+        </h3>
+        <a href="{% url 'admin_matches' %}" class="text-sm text-[#0d5c2e] hover:underline font-semibold">Voir tout</a>
+      </div>
+      <div class="divide-y divide-gray-100">
+        {% for m in recent_matches %}
+        <div class="match-row">
+          <div class="flex-1 text-sm font-semibold text-gray-700 truncate">{{ m.home_team.name }}</div>
+          <div class="bg-gray-900 text-white px-4 py-1.5 rounded-lg font-black mx-3">{{ m.home_score }} – {{ m.away_score }}</div>
+          <div class="flex-1 text-sm font-semibold text-gray-700 truncate text-right">{{ m.away_team.name }}</div>
+          <a href="{% url 'admin_update_score' m.pk %}" class="ml-3 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors">
+            <i class="fas fa-edit text-gray-600 text-xs"></i>
+          </a>
+        </div>
+        {% empty %}
+        <div class="py-8 text-center text-gray-400">
+          <i class="fas fa-inbox text-3xl mb-2"></i>
+          <p>Aucun résultat</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden animate-slideUp" style="animation-delay: 0.65s;">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-bold text-gray-900 flex items-center gap-2">
+          <i class="fas fa-calendar text-[#0d5c2e]"></i>
+          Prochains matchs
+        </h3>
+        <a href="{% url 'admin_matches' %}" class="text-sm text-[#0d5c2e] hover:underline font-semibold">Voir tout</a>
+      </div>
+      <div class="divide-y divide-gray-100">
+        {% for m in next_matches %}
+        <div class="match-row">
+          <div class="flex-1 text-sm font-semibold text-gray-700 truncate">{{ m.home_team.name }}</div>
+          <div class="text-gray-400 font-bold mx-3">vs</div>
+          <div class="flex-1 text-sm font-semibold text-gray-700 truncate text-right">{{ m.away_team.name }}</div>
+          {% if m.match_date %}
+          <div class="ml-3 text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{{ m.match_date|date:"d/m H:i" }}</div>
+          {% endif %}
+          <a href="{% url 'admin_update_score' m.pk %}" class="ml-3 w-8 h-8 bg-[#0d5c2e] hover:bg-[#094a24] rounded-lg flex items-center justify-center transition-colors">
+            <i class="fas fa-play text-white text-xs"></i>
+          </a>
+        </div>
+        {% empty %}
+        <div class="py-8 text-center text-gray-400">
+          <i class="fas fa-calendar-times text-3xl mb-2"></i>
+          <p>Aucun match programmé</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

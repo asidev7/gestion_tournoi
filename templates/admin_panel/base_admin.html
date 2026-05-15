@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin — ADEIB U26{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* Typography */
+    body { font-family: 'Roboto', sans-serif; }
+    h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Poppins', sans-serif; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #0d5c2e; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #094a24; }
+
+    /* Animations */
+    @keyframes slideInLeft {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+
+    /* Sidebar styles */
+    .sidebar {
+      background: #0d5c2e;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-link {
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: white;
+      transform: scaleY(0);
+      transition: transform 0.2s ease;
+    }
+
+    .sidebar-link:hover::before,
+    .sidebar-link.active::before {
+      transform: scaleY(1);
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link.active {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Glass effect */
+    .glass {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Card hover effects */
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+
+    /* Button effects */
+    .btn-shine {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-shine::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -100%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: rotate(25deg);
+      transition: left 0.6s ease;
+    }
+    .btn-shine:hover::after {
+      left: 150%;
+    }
+
+    /* Mobile overlay */
+    .sidebar-overlay {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Mobile overlay -->
+<div id="sidebarOverlay" class="sidebar-overlay hidden fixed inset-0 z-30 lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside id="adminSidebar" class="sidebar fixed top-0 left-0 h-full w-72 z-40 -translate-x-full lg:translate-x-0 shadow-2xl flex flex-col">
+
+  <!-- Logo -->
+  <div class="flex items-center gap-4 px-6 py-6 border-b border-white/20">
+    <div class="w-12 h-12 bg-white flex items-center justify-center text-[#0d5c2e] font-black text-2xl shadow-lg">
+      A
+    </div>
+    <div>
+      <div class="text-white font-heading font-black text-lg leading-tight">ADEIB U26</div>
+      <div class="text-white/70 text-xs tracking-widest uppercase font-medium">Administration</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+    <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider">Principal</div>
+
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-tachometer-alt text-lg"></i>
+      </div>
+      <span>Tableau de bord</span>
+    </a>
+
+    <a href="{% url 'admin_tournament_setup' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-trophy text-lg"></i>
+      </div>
+      <span>Tournoi</span>
+    </a>
+
+    <a href="{% url 'admin_teams' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-users text-lg"></i>
+      </div>
+      <span>Équipes & Joueurs</span>
+    </a>
+
+    <a href="{% url 'admin_matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-futbol text-lg"></i>
+      </div>
+      <span>Matchs</span>
+    </a>
+
+    <a href="{% url 'admin_tickets' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-ticket-alt text-lg"></i>
+      </div>
+      <span>Tickets Standard</span>
+    </a>
+
+    <a href="{% url 'admin_ticket_designer' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4d03f] rounded-lg flex items-center justify-center">
+        <i class="fas fa-magic text-lg"></i>
+      </div>
+      <span>Designer Tickets ✨</span>
+    </a>
+
+    <a href="{% url 'admin_generate_matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-magic text-lg"></i>
+      </div>
+      <span>Générer matchs</span>
+    </a>
+
+    <a href="{% url 'admin_generate_knockout' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-sitemap text-lg"></i>
+      </div>
+      <span>Phase finale</span>
+    </a>
+
+    <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider mt-6">Site public</div>
+
+    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-home text-lg"></i>
+      </div>
+      <span>Accueil</span>
+    </a>
+
+    <a href="{% url 'matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-list text-lg"></i>
+      </div>
+      <span>Voir les matchs</span>
+    </a>
+
+    <a href="{% url 'bracket' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
+      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+        <i class="fas fa-sitemap text-lg"></i>
+      </div>
+      <span>Bracket</span>
+    </a>
+  </nav>
+
+  <!-- User -->
+  <div class="px-4 py-4 border-t border-white/20">
+    <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+      <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-[#0d5c2e] font-black text-lg">
+        {{ request.user.username|first|upper }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-white font-bold text-sm truncate">{{ request.user.username }}</div>
+        <div class="text-white/60 text-xs">Administrateur</div>
+      </div>
+      <a href="/admin/logout/" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="lg:ml-72 min-h-screen flex flex-col">
+
+  <!-- Top bar -->
+  <header class="glass sticky top-0 z-20 border-b border-gray-200 px-4 lg:px-8 h-16 flex items-center gap-4">
+    <button id="sidebarToggle" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+
+    <div class="flex-1">
+      <h2 class="font-heading font-bold text-xl text-gray-900">{% block page_title %}Administration{% endblock %}</h2>
+    </div>
+
+    {% block header_actions %}{% endblock %}
+
+    <a href="{% url 'home' %}" target="_blank" class="hidden sm:flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm">
+      <i class="fas fa-external-link-alt"></i>
+      <span class="hidden md:inline">Voir le site</span>
+    </a>
+  </header>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="px-4 lg:px-8 mt-4 space-y-2">
+    {% for msg in messages %}
+    <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold animate-fadeIn
+      {% if msg.tags == 'success' %}bg-green-100 text-green-800 border-2 border-green-200
+      {% elif msg.tags == 'error' %}bg-red-100 text-red-800 border-2 border-red-200
+      {% else %}bg-gray-100 text-gray-800 border-2 border-gray-200{% endif %}">
+      <i class="fas {% if msg.tags == 'success' %}fa-check-circle{% elif msg.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Content -->
+  <main class="flex-1 p-4 lg:p-8">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+  // Sidebar toggle
+  function toggleSidebar() {
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+    if (isOpen) {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    } else {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  // Close sidebar on window resize if going to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) {
+      document.getElementById('sidebarOverlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Active sidebar link
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('[data-sidebar]').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href && currentPath.startsWith(href) && href !== '/admin-panel/') {
+      link.classList.add('active');
+    } else if (href === '/admin-panel/' && currentPath === '/admin-panel/') {
+      link.classList.add('active');
+    }
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

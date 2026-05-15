@@ -1,0 +1,18 @@
+{% load static %}
+<div class="bracket-team {% if winner and team and winner == team %}winner{% endif %}">
+  {% if team %}
+  {% if team.logo %}
+  <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="w-6 h-6 rounded-full object-cover border border-gray-200 shrink-0">
+  {% else %}
+  <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 text-xs shrink-0">⚽</div>
+  {% endif %}
+  <span class="flex-1 truncate">{{ team.name }}</span>
+  {% if status == 'LIVE' or status == 'FINISHED' %}
+  <span class="font-black text-sm {% if winner and winner == team %}text-black{% else %}text-gray-600{% endif %}">{{ score }}</span>
+  {% endif %}
+  {% if winner and winner == team %}<i class="fas fa-check text-black text-xs shrink-0"></i>{% endif %}
+  {% else %}
+  <div class="w-6 h-6 rounded-full bg-gray-100 shrink-0"></div>
+  <span class="flex-1 text-gray-300 italic text-xs">À définir</span>
+  {% endif %}
+</div>

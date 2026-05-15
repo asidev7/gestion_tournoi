@@ -1,0 +1,136 @@
+from django import forms
+from .models import Team, Player, Match, Goal, Standing, KnockoutMatch, Tournament, Group, TeamRegistration, TicketConfig
+
+
+class TeamRegistrationForm(forms.ModelForm):
+    class Meta:
+        model = TeamRegistration
+        fields = ['team_name', 'captain_name', 'phone', 'email', 'neighborhood', 'player_count', 'payment_proof', 'notes']
+        widgets = {
+            'team_name':    forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Les Lions d\'Illara'}),
+            'captain_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Prénom et nom'}),
+            'phone':        forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+229 ...'}),
+            'email':        forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'optionnel'}),
+            'neighborhood': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Quartier Centre'}),
+            'player_count': forms.NumberInput(attrs={'class': 'form-input', 'min': 7, 'max': 18}),
+            'notes':        forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Informations complémentaires...'}),
+        }
+
+
+class TournamentForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ['name', 'edition', 'start_date', 'end_date', 'location', 'description', 'logo']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class TeamForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = ['name', 'logo', 'group']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['group'].queryset = Group.objects.all()
+        self.fields['group'].required = False
+
+
+class PlayerForm(forms.ModelForm):
+    class Meta:
+        model = Player
+        fields = ['first_name', 'last_name', 'age', 'position', 'jersey_number', 'photo', 'is_captain']
+        widgets = {
+            'age': forms.NumberInput(attrs={'min': 15, 'max': 40}),
+            'jersey_number': forms.NumberInput(attrs={'min': 1, 'max': 99}),
+        }
+
+
+class MatchForm(forms.ModelForm):
+    class Meta:
+        model = Match
+        fields = ['phase', 'group', 'home_team', 'away_team', 'match_date', 'venue', 'matchday', 'status']
+        widgets = {
+            'match_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
+    def __init__(self, *args, tournament=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if tournament:
+            self.fields['home_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['away_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['group'].queryset = Group.objects.filter(tournament=tournament)
+        self.fields['group'].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        home = cleaned.get('home_team')
+        away = cleaned.get('away_team')
+        if home and away and home == away:
+            raise forms.ValidationError("Les deux équipes doivent être différentes.")
+        return cleaned
+
+
+class ScoreUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Match
+        fields = ['home_score', 'away_score', 'status']
+        widgets = {
+            'home_score': forms.NumberInput(attrs={'min': 0}),
+            'away_score': forms.NumberInput(attrs={'min': 0}),
+        }
+
+
+class GoalForm(forms.ModelForm):
+    class Meta:
+        model = Goal
+        fields = ['player', 'team', 'minute', 'is_own_goal', 'is_penalty']
+        widgets = {
+            'minute': forms.NumberInput(attrs={'min': 1, 'max': 120}),
+        }
+
+    def __init__(self, *args, match=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if match:
+            teams = [match.home_team, match.away_team]
+            self.fields['team'].queryset = Team.objects.filter(pk__in=[t.pk for t in teams])
+            self.fields['player'].queryset = Player.objects.filter(team__in=teams)
+
+
+class KnockoutMatchForm(forms.ModelForm):
+    class Meta:
+        model = KnockoutMatch
+        fields = ['home_team', 'away_team', 'home_score', 'away_score',
+                  'home_penalties', 'away_penalties', 'status', 'match_date', 'venue']
+        widgets = {
+            'match_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'home_score': forms.NumberInput(attrs={'min': 0}),
+            'away_score': forms.NumberInput(attrs={'min': 0}),
+            'home_penalties': forms.NumberInput(attrs={'min': 0}),
+            'away_penalties': forms.NumberInput(attrs={'min': 0}),
+        }
+
+
+class TicketConfigForm(forms.ModelForm):
+    class Meta:
+        model = TicketConfig
+        fields = ['price', 'currency', 'ticket_size', 'quantity', 'gate_opens', 'gate_closes', 'ticket_text', 'is_active']
+        widgets = {
+            'price': forms.NumberInput(attrs={'min': 0, 'step': 100}),
+            'quantity': forms.NumberInput(attrs={'min': 1, 'max': 10000}),
+            'gate_opens': forms.TimeInput(attrs={'type': 'time'}),
+            'gate_closes': forms.TimeInput(attrs={'type': 'time'}),
+            'ticket_text': forms.TextInput(attrs={'placeholder': 'Ex: Match important - places numérotées'}),
+        }
+        labels = {
+            'price': 'Prix du ticket',
+            'currency': 'Devise',
+            'ticket_size': 'Taille des tickets',
+            'quantity': 'Quantité à générer',
+            'gate_opens': 'Ouverture des portes',
+            'gate_closes': 'Fermeture des portes',
+            'ticket_text': 'Texte additionnel sur les tickets',
+            'is_active': 'Actif',
+        }

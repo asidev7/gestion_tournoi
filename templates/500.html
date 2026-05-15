@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}500 · Erreur serveur{% endblock %}
+{% block content %}
+  <div class="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+    <div class="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-lg font-bold text-white">500</div>
+    <h1 class="text-lg font-semibold text-slate-900">Erreur serveur</h1>
+    <p class="mt-2 text-sm text-slate-600">Une erreur est survenue. Réessayez plus tard.</p>
+    <a class="mt-6 inline-block rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800" href="/">Retour à l’accueil</a>
+  </div>
+{% endblock %}

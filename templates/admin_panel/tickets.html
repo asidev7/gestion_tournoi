@@ -1,0 +1,334 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Gestion des Tickets - ADEIB U26{% endblock %}
+{% block page_title %}Gestion des Tickets{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Animations premium */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #0d5c2e; box-shadow: 0 0 0 0 rgba(13, 92, 46, 0.2); }
+  50% { border-color: #4ade80; box-shadow: 0 0 0 4px rgba(13, 92, 46, 0.1); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.4s ease-out forwards;
+}
+
+/* Cards */
+.stat-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  border-color: #0d5c2e;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(13, 92, 46, 0.1);
+}
+
+.ticket-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ticket-card:hover {
+  border-color: #0d5c2e;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+.ticket-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ticket-badge-small { background: #1a1a1a; color: white; }
+.ticket-badge-medium { background: #0d5c2e; color: white; }
+.ticket-badge-large { background: #c41e3a; color: white; }
+
+/* Buttons */
+.btn-config {
+  background: white;
+  color: #0d5c2e;
+  border: 2px solid #0d5c2e;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-config:hover {
+  background: #0d5c2e;
+  color: white;
+}
+
+.btn-generate {
+  background: #0d5c2e;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(13, 92, 46, 0.3);
+}
+
+.btn-generate:hover {
+  background: #094a24;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 92, 46, 0.4);
+}
+
+.btn-download {
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-download:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
+
+/* Icon containers */
+.icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Empty state */
+.empty-state {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 3px dashed #d1d5db;
+  border-radius: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="w-full">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fadeInUp">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+        <div class="w-12 h-12 bg-[#0d5c2e] rounded-xl flex items-center justify-center">
+          <i class="fas fa-ticket-alt text-white text-xl"></i>
+        </div>
+        Gestion des Tickets
+      </h1>
+      <p class="text-gray-500 mt-2 ml-15">Configurer et générer les tickets pour chaque match</p>
+    </div>
+    {% if tournament %}
+    <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
+      <i class="fas fa-trophy mr-2 text-[#0d5c2e]"></i>{{ tournament.name }}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Info Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="stat-card animate-fadeInUp" style="animation-delay: 0.05s;">
+      <div class="flex items-center gap-4">
+        <div class="icon-box bg-green-100">
+          <i class="fas fa-futbol text-[#0d5c2e] text-xl"></i>
+        </div>
+        <div>
+          <div class="text-3xl font-black text-gray-900">{{ matches|length }}</div>
+          <div class="text-sm text-gray-500 font-medium">Matchs disponibles</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card animate-fadeInUp" style="animation-delay: 0.1s;">
+      <div class="flex items-center gap-4">
+        <div class="icon-box bg-blue-100">
+          <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+        </div>
+        <div>
+          <div class="text-3xl font-black text-gray-900">
+            {% with total_tickets=0 %}
+              {% for match in matches %}
+                {% if match.ticket_config %}
+                  {% with total_tickets=total_tickets|add:match.ticket_config.tickets.count %}{% endwith %}
+                {% endif %}
+              {% endfor %}
+              {{ total_tickets|default:"0" }}
+            {% endwith %}
+          </div>
+          <div class="text-sm text-gray-500 font-medium">Tickets générés</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card animate-fadeInUp" style="animation-delay: 0.15s;">
+      <div class="flex items-center gap-4">
+        <div class="icon-box bg-amber-100">
+          <i class="fas fa-check-circle text-amber-600 text-xl"></i>
+        </div>
+        <div>
+          <div class="text-3xl font-black text-gray-900">
+            {% with active_configs=0 %}
+              {% for match in matches %}
+                {% if match.ticket_config and match.ticket_config.is_active %}
+                  {% with active_configs=active_configs|add:1 %}{% endwith %}
+                {% endif %}
+              {% endfor %}
+              {{ active_configs|default:"0" }}
+            {% endwith %}
+          </div>
+          <div class="text-sm text-gray-500 font-medium">Configurations actives</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Matches Grid -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    {% for match in matches %}
+    <div class="ticket-card animate-slideIn" style="animation-delay: {% widthratio forloop.counter 1 50 %}ms;">
+      <div class="flex flex-col gap-4">
+        <!-- Match Header -->
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-xl font-black text-gray-400">
+              VS
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-gray-900 text-lg">{{ match.home_team.name }}</span>
+                <span class="text-gray-400 font-medium">vs</span>
+                <span class="font-bold text-gray-900 text-lg">{{ match.away_team.name }}</span>
+              </div>
+              <div class="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                <span class="flex items-center gap-1">
+                  <i class="fas fa-calendar text-[#0d5c2e]"></i>
+                  {% if match.match_date %}{{ match.match_date|date:"d/m/Y" }}{% else %}Date à définir{% endif %}
+                </span>
+                {% if match.group %}
+                <span class="bg-[#0d5c2e] text-white px-3 py-0.5 rounded-full text-xs font-bold">
+                  Groupe {{ match.group.name }}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket Status -->
+        {% if match.ticket_config %}
+        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+          <div class="text-center p-3 bg-gray-50 rounded-xl">
+            <div class="text-xs text-gray-500 mb-1">Prix</div>
+            <div class="font-bold text-gray-900 text-lg">{{ match.ticket_config.price_display }}</div>
+          </div>
+
+          <div class="text-center p-3 bg-gray-50 rounded-xl">
+            <div class="text-xs text-gray-500 mb-1">Format</div>
+            <span class="ticket-badge
+              {% if match.ticket_config.ticket_size == 'small' %}ticket-badge-small
+              {% elif match.ticket_config.ticket_size == 'medium' %}ticket-badge-medium
+              {% elif match.ticket_config.ticket_size == 'large' %}ticket-badge-large
+              {% else %}bg-gradient-to-r from-yellow-400 to-yellow-600 text-white{% endif %}">
+              {% if match.ticket_config.ticket_size == 'small' %}10/page
+              {% elif match.ticket_config.ticket_size == 'medium' %}6/page
+              {% elif match.ticket_config.ticket_size == 'large' %}4/page
+              {% else %}Premium{% endif %}
+            </span>
+          </div>
+
+          <div class="text-center p-3 bg-gray-50 rounded-xl">
+            <div class="text-xs text-gray-500 mb-1">Tickets</div>
+            <div class="font-bold {% if match.ticket_config.tickets.count > 0 %}text-[#0d5c2e]{% else %}text-gray-400{% endif %} text-lg">
+              {{ match.ticket_config.tickets.count }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-2">
+          <a href="{% url 'admin_ticket_config' match.pk %}" class="btn-config flex-1 justify-center">
+            <i class="fas fa-cog"></i>
+            Configurer
+          </a>
+
+          {% if match.ticket_config.tickets.count > 0 %}
+          <a href="{% url 'admin_download_tickets' match.ticket_config.pk %}" class="btn-download flex-1 justify-center">
+            <i class="fas fa-download"></i>
+            PDF
+          </a>
+          {% else %}
+          <a href="{% url 'admin_generate_tickets' match.ticket_config.pk %}" class="btn-generate flex-1 justify-center">
+            <i class="fas fa-plus"></i>
+            Générer
+          </a>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+          <div class="text-gray-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            Aucune configuration
+          </div>
+          <a href="{% url 'admin_ticket_config' match.pk %}" class="btn-generate">
+            <i class="fas fa-cog mr-2"></i>
+            Configurer
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full empty-state py-16 text-center animate-fadeInUp">
+      <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-ticket-alt text-gray-400 text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">Aucun match disponible</h3>
+      <p class="text-gray-500">Créez des matchs pour commencer la génération de tickets.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

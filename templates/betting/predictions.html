@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pronostics — ADEIB U26{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-8">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg bg-black">
+      <i class="fas fa-coins"></i>
+    </div>
+    <div>
+      <h1 class="text-2xl font-black text-gray-900">Pronostics</h1>
+      <p class="text-sm text-gray-500">Faites vos prédictions sur les matchs à venir</p>
+    </div>
+    <a href="{% url 'my_predictions' %}" class="ml-auto text-xs font-bold px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+      <i class="fas fa-user mr-1"></i>Mes pronostics
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Matches list -->
+    <div class="lg:col-span-2 space-y-4">
+      {% if not matches_data %}
+      <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+        <div class="text-4xl mb-3">📅</div>
+        <p class="text-gray-400 font-semibold">Aucun match à pronostiquer pour le moment.</p>
+      </div>
+      {% endif %}
+
+      {% for item in matches_data %}
+      {% with match=item.match pred=item.prediction %}
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <!-- Match info -->
+        <div class="px-5 py-4 border-b border-gray-50">
+          {% if match.group %}<div class="text-xs text-black font-bold mb-1">Groupe {{ match.group.name }}{% if match.match_date %} · {{ match.match_date|date:"d/m H:i" }}{% endif %}</div>{% endif %}
+          <div class="grid grid-cols-3 items-center gap-2 text-center">
+            <div class="font-black text-sm text-gray-900">{{ match.home_team.name }}</div>
+            <div class="text-gray-400 font-bold text-xs">VS</div>
+            <div class="font-black text-sm text-gray-900">{{ match.away_team.name }}</div>
+          </div>
+        </div>
+
+        <!-- Prediction buttons -->
+        <div class="px-5 py-4">
+          {% if pred %}
+          <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+            <i class="fas fa-check-circle text-black"></i>
+            Votre pronostic: <strong class="text-gray-800">{{ pred.prediction }}</strong>
+            {% if pred.is_correct == True %}<span class="text-black font-bold">✓ Correct</span>
+            {% elif pred.is_correct == False %}<span class="text-gray-600 font-bold">✗ Incorrect</span>{% endif %}
+          </div>
+          {% endif %}
+          <div class="flex gap-2 justify-center flex-wrap">
+            <a href="{% url 'make_prediction' match.pk %}" class="text-xs font-bold px-4 py-2 rounded-xl transition-colors
+              {% if pred %}bg-gray-100 text-gray-600 hover:bg-gray-200{% else %}text-white hover:opacity-90 bg-black{% endif %}">
+              {% if pred %}<i class="fas fa-edit mr-1"></i>Modifier{% else %}<i class="fas fa-coins mr-1"></i>Pronostiquer{% endif %}
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+
+    <!-- Leaderboard sidebar -->
+    <div>
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden sticky top-20">
+        <div class="px-5 py-4 border-b border-gray-100 bg-black">
+          <h3 class="text-sm font-black text-white"><i class="fas fa-trophy mr-2 text-white"></i>Classement</h3>
+        </div>
+        <div class="divide-y divide-gray-50">
+          {% for entry in leaderboard %}
+          <div class="px-4 py-3 flex items-center gap-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0
+              {% if forloop.counter == 1 %}bg-black text-white
+              {% elif forloop.counter == 2 %}bg-gray-200 text-gray-700
+              {% elif forloop.counter == 3 %}bg-gray-500 text-white
+              {% else %}bg-gray-100 text-gray-500{% endif %}">
+              {{ forloop.counter }}
+            </div>
+            <div class="flex-1 text-sm font-semibold text-gray-800 truncate">{{ entry.user.username }}</div>
+            <div class="text-sm font-black text-black">{{ entry.points }}pts</div>
+          </div>
+          {% empty %}
+          <div class="px-4 py-6 text-center text-sm text-gray-400">Aucun pronostic</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

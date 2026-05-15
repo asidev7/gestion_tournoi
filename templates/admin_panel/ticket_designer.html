@@ -1,0 +1,174 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Designer de Tickets — ADEIB U26{% endblock %}
+{% block page_title %}🎫 Designer de Tickets Premium{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fadeIn">
+
+  <!-- Introduction -->
+  <div class="bg-gradient-to-r from-[#0d5c2e] via-[#1a7a3e] to-[#0d5c2e] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-[#d4af37]/10 rounded-full -ml-24 -mb-24 blur-2xl"></div>
+
+    <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="text-4xl">✨</span>
+        <h2 class="font-heading font-bold text-2xl">Design Unique & Cool</h2>
+      </div>
+      <p class="text-white/80 max-w-2xl">
+        Générez des tickets premium avec QR code et bordure rectangulaire stylisée.
+        Chaque ticket est unique avec un design moderne et professionnel.
+      </p>
+    </div>
+  </div>
+
+  <!-- Fonctionnalités -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover-lift">
+      <div class="w-14 h-14 bg-gradient-to-br from-[#0d5c2e] to-[#1a7a3e] rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-4">
+        📱
+      </div>
+      <h3 class="font-heading font-bold text-lg text-gray-900 mb-2">QR Code Intégré</h3>
+      <p class="text-gray-600 text-sm">Chaque ticket contient un QR code unique scannable pour validation rapide.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover-lift">
+      <div class="w-14 h-14 bg-gradient-to-br from-[#d4af37] to-[#f4d03f] rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-4">
+        🎨
+      </div>
+      <h3 class="font-heading font-bold text-lg text-gray-900 mb-2">Design Premium</h3>
+      <p class="text-gray-600 text-sm">Bordure rectangulaire stylisée avec dorures et coins décoratifs.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover-lift">
+      <div class="w-14 h-14 bg-gradient-to-br from-[#c41e3a] to-[#e63950] rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-4">
+        🏷️
+      </div>
+      <h3 class="font-heading font-bold text-lg text-gray-900 mb-2">Numéro Unique</h3>
+      <p class="text-gray-600 text-sm">Format ADEIB-XXXXXX avec numérotation sécurisée et traçable.</p>
+    </div>
+  </div>
+
+  <!-- Liste des matchs disponibles -->
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+      <h3 class="font-heading font-bold text-lg text-gray-900 flex items-center gap-2">
+        <i class="fas fa-futbol text-[#0d5c2e]"></i>
+        Matchs Disponibles
+      </h3>
+      <span class="text-sm text-gray-500">{{ matches|length }} match(es)</span>
+    </div>
+
+    {% if matches %}
+    <div class="divide-y divide-gray-100">
+      {% for match in matches %}
+      <div class="p-6 hover:bg-gray-50 transition-colors">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+
+          <!-- Info match -->
+          <div class="flex-1">
+            <div class="flex items-center gap-4 mb-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold
+                {% if match.phase == 'GROUP' %}bg-blue-100 text-blue-700
+                {% elif match.phase == 'QF' %}bg-purple-100 text-purple-700
+                {% elif match.phase == 'SF' %}bg-orange-100 text-orange-700
+                {% elif match.phase == 'FINAL' %}bg-red-100 text-red-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ match.get_phase_display }}
+              </span>
+              {% if match.group %}
+              <span class="px-2 py-1 bg-gray-100 rounded text-xs font-semibold text-gray-600">
+                Groupe {{ match.group.name }}
+              </span>
+              {% endif %}
+            </div>
+
+            <div class="flex items-center gap-4">
+              <div class="text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#0d5c2e] to-[#1a7a3e] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                  {{ match.home_team.name|first|upper }}
+                </div>
+                <div class="text-xs font-semibold text-gray-700 mt-1">{{ match.home_team.name|truncatechars:8 }}</div>
+              </div>
+
+              <div class="flex flex-col items-center">
+                <span class="text-2xl font-black text-gray-400">VS</span>
+                {% if match.match_date %}
+                <span class="text-xs text-gray-500">{{ match.match_date|date:"d/m/Y" }}</span>
+                {% endif %}
+              </div>
+
+              <div class="text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#c41e3a] to-[#e63950] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                  {{ match.away_team.name|first|upper }}
+                </div>
+                <div class="text-xs font-semibold text-gray-700 mt-1">{{ match.away_team.name|truncatechars:8 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-2">
+            <a href="{% url 'admin_preview_cool_ticket' match.pk %}" target="_blank"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0d5c2e] to-[#1a7a3e] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
+              <i class="fas fa-eye"></i>
+              Aperçu Cool
+            </a>
+
+            <a href="{% url 'admin_generate_cool_tickets' match.pk %}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
+              <i class="fas fa-magic"></i>
+              Générer
+            </a>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-12 text-center">
+      <div class="text-6xl mb-4">⚽</div>
+      <h4 class="font-heading font-bold text-gray-900 mb-2">Aucun match disponible</h4>
+      <p class="text-gray-500">Créez d'abord des matchs pour pouvoir générer des tickets.</p>
+      <a href="{% url 'admin_matches' %}" class="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-[#0d5c2e] text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+        <i class="fas fa-plus"></i>
+        Créer un match
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Guide d'utilisation -->
+  <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+    <h3 class="font-heading font-bold text-xl mb-4 flex items-center gap-2">
+      <i class="fas fa-lightbulb text-[#d4af37]"></i>
+      Comment utiliser le Designer
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="flex gap-3">
+        <div class="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
+        <div>
+          <h4 class="font-semibold mb-1">Choisir un match</h4>
+          <p class="text-gray-400 text-sm">Sélectionnez le match pour lequel vous voulez créer des tickets.</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <div class="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
+        <div>
+          <h4 class="font-semibold mb-1">Voir l'aperçu</h4>
+          <p class="text-gray-400 text-sm">Cliquez sur "Aperçu Cool" pour voir le rendu du ticket.</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <div class="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
+        <div>
+          <h4 class="font-semibold mb-1">Générer</h4>
+          <p class="text-gray-400 text-sm">Cliquez sur "Générer" pour créer vos tickets en PDF.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

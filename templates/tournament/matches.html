@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Matchs · ADEIB U26{% endblock %}
+{% block content %}
+<div class="page-shell-wide pt-6">
+  <div class="hero-bg rounded-[32px] px-6 py-10 text-center text-white shadow-2xl shadow-green-950/15 md:px-10">
+    <h1 class="font-heading text-3xl font-black md:text-5xl">Calendrier des Matchs</h1>
+    <div class="mx-auto my-3 h-1 w-16 rounded-full bg-white/70"></div>
+    <p class="text-xs uppercase tracking-[0.28em] text-white/70">ADEIB U26 · Illara</p>
+  </div>
+</div>
+<div class="page-shell-wide px-1 py-6">
+  <!-- FILTRES -->
+  <form method="get" class="site-card mb-6 flex flex-wrap items-end gap-3 p-4">
+    <div>
+      <label class="block text-xs font-bold text-gray-500 mb-1">Phase</label>
+      <select name="phase" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-black" onchange="this.form.submit()">
+        {% for val,label in phases %}<option value="{{ val }}" {% if phase == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    {% if groups %}
+    <div>
+      <label class="block text-xs font-bold text-gray-500 mb-1">Groupe</label>
+      <select name="group" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-black" onchange="this.form.submit()">
+        <option value="">Tous</option>
+        {% for g in groups %}<option value="{{ g.name }}" {% if group_filter == g.name %}selected{% endif %}>Groupe {{ g.name }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <a href="{% url 'matches' %}" class="text-xs font-bold px-3 py-1.5 rounded-lg border-2 border-gray-200 text-gray-500 hover:border-gray-400 transition-colors">Réinitialiser</a>
+  </form>
+
+  {% if matches %}
+    {% regroup matches by matchday as md_list %}
+    {% for md in md_list %}
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="rounded-full bg-[#0d5c2e] px-3 py-1 text-xs font-black text-white">
+          {% if phase == 'GROUP' %}Journée {{ md.grouper }}{% else %}{{ matches.0.get_phase_display }}{% endif %}
+        </span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+      {% for match in md.list %}
+      <a href="{% url 'match_detail' match.pk %}" class="block no-underline mb-2">
+        <div class="site-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-xl
+          {% if match.status == 'LIVE' %}border-l-4 border-red-500{% elif match.status == 'FINISHED' %}border-l-4 border-[#0d5c2e]{% endif %}">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-gray-400">
+              <i class="fas fa-calendar mr-1"></i>{% if match.match_date %}{{ match.match_date|date:"d/m/Y · H:i" }}{% else %}Date TBD{% endif %}
+            </span>
+            <div class="flex items-center gap-2">
+              {% if match.group %}<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Gr. {{ match.group.name }}</span>{% endif %}
+              {% if match.status == 'LIVE' %}<span class="live-pill"><span class="live-dot"></span>LIVE</span>
+              {% elif match.status == 'FINISHED' %}<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-black text-white">Terminé</span>
+              {% else %}<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">Programmé</span>{% endif %}
+            </div>
+          </div>
+          <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <div class="flex items-center gap-3">
+              <div class="team-logo h-14 w-14 shrink-0">
+                {% if match.home_team.logo %}
+                <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">
+                {% else %}
+                <span class="team-logo-fallback text-base">{{ match.home_team.name|first|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <span class="block text-sm font-extrabold leading-tight text-gray-900">{{ match.home_team.name }}</span>
+                <span class="text-xs text-gray-500">Équipe domicile</span>
+              </div>
+            </div>
+            <div class="text-center">
+              {% if match.status == 'SCHEDULED' %}<span class="text-sm font-black text-gray-300">VS</span>
+              {% else %}<span class="text-3xl font-black text-black tracking-widest">{{ match.score_display }}</span>{% endif %}
+            </div>
+            <div class="flex items-center justify-end gap-3 text-right">
+              <div>
+                <span class="block text-sm font-extrabold leading-tight text-gray-900">{{ match.away_team.name }}</span>
+                <span class="text-xs text-gray-500">Équipe visiteuse</span>
+              </div>
+              <div class="team-logo h-14 w-14 shrink-0">
+                {% if match.away_team.logo %}
+                <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">
+                {% else %}
+                <span class="team-logo-fallback text-base">{{ match.away_team.name|first|upper }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="text-center py-16 text-gray-400"><div class="text-5xl mb-3">⚽</div><p>Aucun match pour cette sélection.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

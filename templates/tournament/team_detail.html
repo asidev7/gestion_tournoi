@@ -1,0 +1,106 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{{ team.name }} · ADEIB U26{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#000,#111)" class="py-10">
+  <div class="max-w-4xl mx-auto px-4 flex items-center gap-5 flex-wrap">
+    <div class="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden bg-white/10 flex items-center justify-center shrink-0">
+      {% if team.logo %}<img src="{{ team.logo.url }}" class="w-full h-full object-cover" alt="">{% else %}<span class="text-4xl">🛡️</span>{% endif %}
+    </div>
+    <div>
+      <div class="w-10 h-0.5 bg-white mb-2 rounded"></div>
+      <h1 class="text-3xl font-black text-white">{{ team.name }}</h1>
+      {% if team.group %}<span class="inline-block mt-1 text-xs text-white font-bold px-3 py-0.5 rounded-full bg-white/20">Groupe {{ team.group.name }}</span>{% endif %}
+      <p class="text-white/55 text-xs mt-1">{{ team.player_count }}/12 joueurs</p>
+    </div>
+  </div>
+</div>
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- JOUEURS -->
+      <div>
+        <h2 class="font-bold text-gray-700 mb-3"><i class="fas fa-user-friends mr-2 text-black"></i>Effectif ({{ team.player_count }}/12)</h2>
+        {% if players %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {% for p in players %}
+          <div class="bg-white rounded-xl border border-gray-100 p-3 text-center relative">
+            {% if p.jersey_number %}<div class="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-white font-black text-xs bg-black">{{ p.jersey_number }}</div>{% endif %}
+            <div class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center">
+              {% if p.photo %}<img src="{{ p.photo.url }}" class="w-full h-full object-cover" alt="">{% else %}<span class="text-2xl">👤</span>{% endif %}
+            </div>
+            <div class="text-sm font-bold text-gray-800 truncate">{{ p.full_name }} {% if p.is_captain %}⭐{% endif %}</div>
+            <span class="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full
+              bg-gray-100 text-black">
+              {{ p.get_position_display }}
+            </span>
+            <div class="text-xs text-gray-400 mt-1">{{ p.age }} ans</div>
+            {% if p.goals_count > 0 %}<div class="text-xs font-bold mt-1 text-black">⚽ {{ p.goals_count }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}<div class="bg-white rounded-xl border border-gray-100 p-6 text-center text-gray-400 text-sm">Aucun joueur enregistré.</div>{% endif %}
+      </div>
+
+      <!-- MATCHS -->
+      {% if matches %}
+      <div>
+        <h2 class="font-bold text-gray-700 mb-3"><i class="fas fa-futbol mr-2 text-black"></i>Matchs</h2>
+        {% for m in matches %}
+        <a href="{% url 'match_detail' m.pk %}" class="block no-underline mb-2">
+          <div class="bg-white rounded-xl border border-gray-100 p-3 hover:border-gray-200 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-gray-400">{% if m.match_date %}{{ m.match_date|date:"d/m/Y" }}{% else %}TBD{% endif %}</span>
+              {% if m.status == 'LIVE' %}<span class="live-pill"><span class="live-dot"></span>LIVE</span>
+              {% elif m.status == 'FINISHED' %}<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-black text-white">Terminé</span>
+              {% else %}<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">Programmé</span>{% endif %}
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+              <div class="flex flex-col items-center gap-1">
+                {% if m.home_team.logo %}<img src="{{ m.home_team.logo.url }}" class="w-9 h-9 rounded-full object-cover border border-gray-100" alt="">{% else %}<div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs">⚽</div>{% endif %}
+                <span class="text-xs font-bold text-center {% if m.home_team == team %}text-black underline underline-offset-2{% endif %}">{{ m.home_team.name }}</span>
+              </div>
+              <div class="text-center font-black {% if m.status == 'SCHEDULED' %}text-gray-300 text-sm{% else %}text-xl text-gray-700{% endif %}">{{ m.score_display }}</div>
+              <div class="flex flex-col items-center gap-1">
+                {% if m.away_team.logo %}<img src="{{ m.away_team.logo.url }}" class="w-9 h-9 rounded-full object-cover border border-gray-100" alt="">{% else %}<div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs">⚽</div>{% endif %}
+                <span class="text-xs font-bold text-center {% if m.away_team == team %}text-black underline underline-offset-2{% endif %}">{{ m.away_team.name }}</span>
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="space-y-4">
+      {% if standings %}
+      <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 text-white text-sm font-bold bg-black">
+          <i class="fas fa-table mr-1"></i>Stats Groupe {{ standings.group.name }}
+        </div>
+        <div class="divide-y divide-gray-50">
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Points</span><strong class="text-black">{{ standings.points }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Joués</span><strong>{{ standings.played }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Victoires</span><strong class="text-black">{{ standings.won }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Nuls</span><strong class="text-orange-600">{{ standings.drawn }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Défaites</span><strong class="text-gray-600">{{ standings.lost }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Buts marqués</span><strong>{{ standings.goals_for }}</strong></div>
+          <div class="flex justify-between px-4 py-2 text-sm"><span class="text-gray-500">Différence</span>
+            <strong {% if standings.goal_difference >= 0 %}class="text-black"{% else %}class="text-gray-600"{% endif %}>{% if standings.goal_difference > 0 %}+{% endif %}{{ standings.goal_difference }}</strong>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% if team.qr_code %}
+      <div class="bg-white rounded-xl border border-gray-100 p-4 text-center">
+        <div class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"><i class="fas fa-qrcode mr-1"></i>QR Code</div>
+        <img src="{{ team.qr_code.url }}" alt="QR Code" class="w-36 mx-auto rounded-lg">
+        <p class="text-xs text-gray-400 mt-2">Scannez pour la fiche équipe</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Phases finales — ADEIB U26{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-8">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg bg-black">
+      <i class="fas fa-sitemap"></i>
+    </div>
+    <div>
+      <h1 class="text-2xl font-black text-gray-900">Phases finales</h1>
+      <p class="text-sm text-gray-500">Tableau des éliminations directes</p>
+    </div>
+    {% if user.is_staff %}
+    <div class="ml-auto flex gap-2">
+      <a href="{% url 'admin_generate_knockout' %}"
+         class="text-xs font-bold px-4 py-2 rounded-lg text-white transition-colors"
+         class="text-xs font-bold px-4 py-2 rounded-lg text-white transition-colors bg-black"
+         onclick="return confirm('Régénérer les phases finales ? Les données existantes seront effacées.')">
+        <i class="fas fa-sync mr-1"></i>Générer
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if not qf_matches and not final_match %}
+  <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+    <div class="text-5xl mb-4">🏆</div>
+    <p class="text-gray-500 font-semibold">Les phases finales n'ont pas encore été générées.</p>
+    {% if user.is_staff %}
+    <a href="{% url 'admin_generate_knockout' %}"
+       class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold transition-colors bg-black">
+      <i class="fas fa-magic"></i> Générer les phases finales
+    </a>
+    {% endif %}
+  </div>
+  {% else %}
+
+  <!-- Bracket layout -->
+  <div class="overflow-x-auto pb-4">
+    <div class="flex gap-6 min-w-max items-start">
+
+      <!-- QF column -->
+      <div class="flex flex-col gap-4 w-56">
+        <div class="text-center mb-2">
+          <span class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full text-white bg-black">Quarts de finale</span>
+        </div>
+        {% for m in qf_matches %}
+        <div class="bracket-match shadow-sm" style="min-height:80px">
+          {% include 'tournament/_bracket_team.html' with team=m.home_team score=m.home_score winner=m.winner status=m.status %}
+          {% include 'tournament/_bracket_team.html' with team=m.away_team score=m.away_score winner=m.winner status=m.status %}
+          {% if m.status == 'FINISHED' %}
+          <div class="px-2 pb-1 text-center">
+            <span class="text-xs text-gray-400 font-semibold">Terminé</span>
+          </div>
+          {% elif m.status == 'LIVE' %}
+          <div class="px-2 pb-1 text-center">
+            <span class="live-pill text-xs">
+              <span class="live-dot"></span>LIVE
+            </span>
+          </div>
+          {% endif %}
+          {% if user.is_staff and m.status != 'FINISHED' %}
+          <div class="px-2 pb-2 text-center">
+            <a href="{% url 'admin_knockout_score' m.pk %}" class="text-xs text-black hover:underline font-semibold">
+              <i class="fas fa-edit mr-1"></i>Modifier
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="bracket-match p-4 text-center text-gray-400 text-xs">À définir</div>
+        {% endfor %}
+      </div>
+
+      <!-- Connector arrows QF → SF -->
+      <div class="flex flex-col justify-around self-stretch w-8 mt-12">
+        {% for i in "12" %}<div class="flex-1 border-r-2 border-t-2 border-b-2 border-gray-200 rounded-r-lg my-4"></div>{% endfor %}
+      </div>
+
+      <!-- SF column -->
+      <div class="flex flex-col gap-4 w-56 mt-12">
+        <div class="text-center mb-2">
+          <span class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full text-white bg-gray-800">Demi-finales</span>
+        </div>
+        {% for m in sf_matches %}
+        <div class="bracket-match shadow-sm">
+          {% include 'tournament/_bracket_team.html' with team=m.home_team score=m.home_score winner=m.winner status=m.status %}
+          {% include 'tournament/_bracket_team.html' with team=m.away_team score=m.away_score winner=m.winner status=m.status %}
+          {% if m.status == 'FINISHED' %}
+          <div class="px-2 pb-1 text-center">
+            <span class="text-xs text-gray-400 font-semibold">Terminé</span>
+          </div>
+          {% elif m.status == 'LIVE' %}
+          <div class="px-2 pb-1 text-center">
+            <span class="live-pill text-xs"><span class="live-dot"></span>LIVE</span>
+          </div>
+          {% endif %}
+          {% if user.is_staff and m.status != 'FINISHED' %}
+          <div class="px-2 pb-2 text-center">
+            <a href="{% url 'admin_knockout_score' m.pk %}" class="text-xs text-black hover:underline font-semibold"><i class="fas fa-edit mr-1"></i>Modifier</a>
+          </div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="bracket-match p-4 text-center text-gray-400 text-xs">En attente QF</div>
+        {% endfor %}
+      </div>
+
+      <!-- Connector SF → Final -->
+      <div class="flex flex-col justify-center self-stretch w-8 mt-16">
+        <div class="flex-1 border-r-2 border-t-2 border-b-2 border-gray-200 rounded-r-lg my-8"></div>
+      </div>
+
+      <!-- Final column -->
+      <div class="flex flex-col gap-4 w-56 mt-20">
+        <div class="text-center mb-2">
+          <span class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full text-white bg-black">Finale 🏆</span>
+        </div>
+        {% if final_match %}
+        <div class="bracket-match shadow-md border-2 border-black">
+          {% include 'tournament/_bracket_team.html' with team=final_match.home_team score=final_match.home_score winner=final_match.winner status=final_match.status %}
+          {% include 'tournament/_bracket_team.html' with team=final_match.away_team score=final_match.away_score winner=final_match.winner status=final_match.status %}
+          {% if final_match.status == 'FINISHED' and final_match.winner %}
+          <div class="px-3 py-2 text-center bg-gray-100">
+            <div class="text-xs text-black font-black uppercase tracking-widest">🏆 Champion</div>
+            <div class="text-sm font-black text-gray-900 mt-0.5">{{ final_match.winner.name }}</div>
+          </div>
+          {% elif final_match.status == 'LIVE' %}
+          <div class="px-2 pb-1 text-center">
+            <span class="live-pill text-xs"><span class="live-dot"></span>LIVE</span>
+          </div>
+          {% endif %}
+          {% if user.is_staff and final_match.status != 'FINISHED' %}
+          <div class="px-2 pb-2 text-center">
+            <a href="{% url 'admin_knockout_score' final_match.pk %}" class="text-xs text-black hover:underline font-semibold"><i class="fas fa-edit mr-1"></i>Modifier</a>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="bracket-match p-4 text-center text-gray-400 text-xs">En attente SF</div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3rd place match -->
+  {% if third_match %}
+  <div class="mt-8">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex-1 border-t border-gray-200"></div>
+      <span class="text-xs font-black uppercase tracking-widest text-gray-400 px-3">Match pour la 3e place 🥉</span>
+      <div class="flex-1 border-t border-gray-200"></div>
+    </div>
+    <div class="max-w-xs mx-auto">
+      <div class="bracket-match shadow-sm">
+        {% include 'tournament/_bracket_team.html' with team=third_match.home_team score=third_match.home_score winner=third_match.winner status=third_match.status %}
+        {% include 'tournament/_bracket_team.html' with team=third_match.away_team score=third_match.away_score winner=third_match.winner status=third_match.status %}
+        {% if third_match.status == 'FINISHED' and third_match.winner %}
+        <div class="px-3 py-2 text-center bg-gray-50">
+          <div class="text-xs text-gray-500 font-black uppercase">🥉 3e place</div>
+          <div class="text-sm font-bold text-gray-800 mt-0.5">{{ third_match.winner.name }}</div>
+        </div>
+        {% elif third_match.status == 'LIVE' %}
+        <div class="px-2 pb-1 text-center">
+          <span class="live-pill text-xs"><span class="live-dot"></span>LIVE</span>
+        </div>
+        {% endif %}
+        {% if user.is_staff and third_match.status != 'FINISHED' %}
+        <div class="px-2 pb-2 text-center">
+          <a href="{% url 'admin_knockout_score' third_match.pk %}" class="text-xs text-black hover:underline font-semibold"><i class="fas fa-edit mr-1"></i>Modifier</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}
