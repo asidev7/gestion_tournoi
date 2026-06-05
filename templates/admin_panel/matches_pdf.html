@@ -1,0 +1,67 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Tableau des matchs (PDF) — Admin ADEIB{% endblock %}
+{% block page_title %}Tableau des matchs · PDF{% endblock %}
+
+{% block content %}
+<div class="w-full">
+  <div class="bg-white rounded-2xl border border-gray-100 p-6 md:p-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div>
+        <h2 class="font-heading text-xl font-bold text-gray-900">Choisir les matchs à exporter</h2>
+        <p class="text-sm text-gray-500 mt-1">Sélectionnez les matchs puis générez un tableau PDF (A4 paysage).</p>
+      </div>
+      <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer">
+        <input type="checkbox" id="selectAll" checked> Tout sélectionner
+      </label>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="overflow-x-auto rounded-xl border border-gray-100">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+              <th class="px-4 py-3 w-10"></th>
+              <th class="px-4 py-3">Date</th>
+              <th class="px-4 py-3">Match</th>
+              <th class="px-4 py-3">Phase</th>
+              <th class="px-4 py-3">Statut</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for m in matches %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3"><input type="checkbox" name="matches" value="{{ m.pk }}" class="match-cb" checked></td>
+              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{% if m.match_date %}{{ m.match_date|date:"d/m/Y H:i" }}{% else %}—{% endif %}</td>
+              <td class="px-4 py-3 font-semibold text-gray-800">{{ m.home_team.name }} <span class="text-gray-400">vs</span> {{ m.away_team.name }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ m.get_phase_display }}{% if m.group %} · Gr. {{ m.group.name }}{% endif %}</td>
+              <td class="px-4 py-3">
+                {% if m.status == 'LIVE' %}<span class="live-pill"><span class="live-dot"></span>LIVE</span>
+                {% elif m.status == 'FINISHED' %}<span class="text-xs font-bold accent-green">{{ m.score_display }}</span>
+                {% else %}<span class="text-xs text-gray-400">Programmé</span>{% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-10 text-center text-gray-400">Aucun match.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-5 mt-6 border-t border-gray-100">
+        <button type="submit" class="flex-1 py-3 rounded-xl text-white text-sm font-bold bg-pitch transition-opacity hover:opacity-90">
+          <i class="fas fa-file-pdf mr-2"></i>Générer le tableau PDF
+        </button>
+        <a href="{% url 'admin_matches' %}" class="flex-1 py-3 rounded-xl text-gray-600 text-sm font-bold text-center bg-gray-100 hover:bg-gray-200 transition-colors">Retour</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const all = document.getElementById('selectAll');
+  const cbs = () => document.querySelectorAll('.match-cb');
+  all?.addEventListener('change', () => cbs().forEach(c => c.checked = all.checked));
+</script>
+{% endblock %}

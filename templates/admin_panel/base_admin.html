@@ -39,47 +39,27 @@
     .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
 
-    /* Sidebar styles — vert plat (pas de dégradé) */
-    .sidebar {
-      background: #0d7a3c;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    /* Sidebar — vert plat, sans dégradé NI animation */
+    .sidebar { background: #0d7a3c; }
 
     .sidebar-link {
       position: relative;
       border-radius: 14px;
-      transition: all 0.2s ease;
     }
 
     .sidebar-link::before {
       content: '';
       position: absolute;
-      left: 6px;
-      top: 18%;
-      bottom: 18%;
-      width: 4px;
-      border-radius: 4px;
+      left: 6px; top: 18%; bottom: 18%;
+      width: 4px; border-radius: 4px;
       background: #e7b84b;
-      transform: scaleY(0);
-      transition: transform 0.2s ease;
+      display: none;
     }
-
     .sidebar-link:hover::before,
-    .sidebar-link.active::before {
-      transform: scaleY(1);
-    }
+    .sidebar-link.active::before { display: block; }
 
-    .sidebar-link:hover {
-      background: rgba(255,255,255,0.08);
-      transform: translateX(2px);
-    }
-    .sidebar-link.active {
-      background: rgba(255,255,255,0.14);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
-    }
-    .sidebar-link .ic {
-      transition: all 0.2s ease;
-    }
+    .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-link.active { background: rgba(255,255,255,0.14); }
     .sidebar-link.active .ic,
     .sidebar-link:hover .ic {
       background: #e7b84b !important;
@@ -102,6 +82,12 @@
     .card-flat {
       background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
     }
+
+    /* Accents verts réutilisables (comme le site public) */
+    .bg-pitch { background: #0d7a3c !important; color: #fff; }
+    .bg-pitch:hover { background: #0a6633 !important; }
+    .accent-green { color: #0d7a3c !important; }
+    .border-pitch { border-color: #0d7a3c !important; }
 
     /* Mobile overlay */
     .sidebar-overlay { background: rgba(0,0,0,0.45); }
@@ -157,6 +143,11 @@
     <a href="{% url 'admin_matches' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
       <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-futbol text-lg"></i></div>
       <span>Matchs</span>
+    </a>
+
+    <a href="{% url 'admin_matches_pdf' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-file-pdf text-lg"></i></div>
+      <span>Tableau matchs (PDF)</span>
     </a>
 
     <a href="{% url 'admin_tickets' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>

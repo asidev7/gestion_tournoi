@@ -86,7 +86,20 @@
     </div>
     {% endfor %}
   {% else %}
-  <div class="text-center py-16 text-gray-400"><div class="text-5xl mb-3">⚽</div><p>Aucun match pour cette sélection.</p></div>
+  <div class="py-16 text-center">
+    <div class="text-6xl mb-4">⚽</div>
+    <p class="text-gray-500 font-semibold text-lg">Aucun match n'a encore été généré.</p>
+    {% if user.is_staff %}
+    <p class="text-gray-400 text-sm mt-1 mb-6">Générez automatiquement tous les matchs de poules en un clic.</p>
+    <a href="{% url 'admin_generate_matches' %}"
+       class="bg-pitch inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-bold text-white transition-opacity hover:opacity-90"
+       onclick="return confirm('Générer automatiquement les matchs de poules ?');">
+      <i class="fas fa-wand-magic-sparkles text-xl"></i> Générer les matchs
+    </a>
+    {% else %}
+    <p class="text-gray-400 text-sm mt-1">Le calendrier sera publié prochainement.</p>
+    {% endif %}
+  </div>
   {% endif %}
 </div>
 {% endblock %}

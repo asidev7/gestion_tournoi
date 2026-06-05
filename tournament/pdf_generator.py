@@ -36,6 +36,7 @@ TICKETS_PER_PAGE = 10
 COLS = 2
 ROWS = 5
 SITE_URL = 'tournoi-adeib.site'
+SITE_BASE = 'https://tournoi-adeib.site'
 
 
 def _static_path(rel):
@@ -62,6 +63,10 @@ def _image_reader(path):
 
 def _currency_symbol(currency):
     return '₦' if currency == 'NGN' else 'CFA'
+
+
+def _currency_word(currency):
+    return 'Naira' if currency == 'NGN' else 'CFA'
 
 
 def _draw_qr(c, data, x, y, size_mm):
@@ -156,13 +161,13 @@ def draw_ticket(c, x, y, width, height, data, config, logos):
                  f"{data.get('match_date','Date')}  ·  {data.get('gate_opens','13:00')}")
     c.drawString(inner_x, y + 8 * mm, str(data.get('venue', 'Stade Cup Legends'))[:30])
 
-    # N° ticket + site
+    # N° ticket + validité (l'URL n'apparaît plus qu'en filigrane)
     c.setFont("Helvetica-Bold", 6)
     c.setFillColor(COLORS['secondary'])
     c.drawString(inner_x, y + 4.5 * mm, f"N° {data.get('ticket_number','000000')}")
-    c.setFont("Helvetica-Oblique", 5.5)
+    c.setFont("Helvetica", 5.5)
     c.setFillColor(COLORS['text_light'])
-    c.drawString(inner_x, y + 2 * mm, SITE_URL)
+    c.drawString(inner_x, y + 2 * mm, "Valable 24h · Non remboursable")
 
     # Talon droit : prix + QR
     stub_w = 26 * mm
@@ -173,22 +178,25 @@ def draw_ticket(c, x, y, width, height, data, config, logos):
     c.setDash()
     cx = perf_x + stub_w / 2
 
-    symbol = _currency_symbol(data.get('currency', 'NGN'))
+    currency = data.get('currency', 'NGN')
+    word = _currency_word(currency)
     price = data.get('price', 200)
     c.setFillColor(COLORS['primary'])
-    c.roundRect(perf_x + 3 * mm, top - 9 * mm, stub_w - 6 * mm, 6 * mm, 1.5 * mm, fill=1, stroke=0)
+    c.roundRect(perf_x + 2 * mm, top - 9 * mm, stub_w - 4 * mm, 6 * mm, 1.5 * mm, fill=1, stroke=0)
     c.setFillColor(COLORS['white'])
-    c.setFont("Helvetica-Bold", 9)
-    c.drawCentredString(cx, top - 7.3 * mm, f"{symbol} {price}")
+    c.setFont("Helvetica-Bold", 8.5)
+    c.drawCentredString(cx, top - 7.3 * mm, f"{price} {word}")
 
-    _draw_qr(c, f"T:{data.get('ticket_number','0')}|M:{data.get('match_id','')}",
-             cx - (13 * mm) / 2, y + 6 * mm, 13)
+    # Le QR redirige vers la page du match (suivi en direct)
+    match_url = f"{SITE_BASE}/matches/{data.get('match_id','')}/"
+    _draw_qr(c, match_url, cx - (13 * mm) / 2, y + 6 * mm, 13)
 
     seat = data.get('seat_number', '')
     c.setFont("Helvetica", 5)
     c.setFillColor(COLORS['text_light'])
     if seat:
         c.drawCentredString(cx, y + 3 * mm, f"Siège {seat}")
+    c.drawCentredString(cx, y + 0.8 * mm, "Valable 24h")
 
 
 def _load_logos(match):
@@ -204,19 +212,46 @@ def _load_logos(match):
     return logos
 
 
-def _draw_page_watermark(c, width, height):
-    """Texte « tournoi-adeib.site » en filigrane diagonal sur la page."""
+def _draw_cut_guides(c, margin_x, margin_top, ticket_w, ticket_h, gap_x, gap_y,
+                     page_height, page_width, rows_filled):
+    """Lignes pointillées + ciseaux pour découper les tickets."""
+    if rows_filled <= 0:
+        return
+
+    x_left = margin_x
+    x_mid = margin_x + ticket_w + gap_x / 2
+    x_right = margin_x + 2 * ticket_w + gap_x
+    y_top = page_height - margin_top
+    y_bottom = page_height - margin_top - rows_filled * ticket_h - (rows_filled - 1) * gap_y
+
     c.saveState()
-    try:
-        c.setFillAlpha(0.04)
-    except Exception:
-        pass
-    c.setFillColor(COLORS['primary_dark'])
-    c.setFont("Helvetica-Bold", 46)
-    c.translate(width / 2, height / 2)
-    c.rotate(35)
-    for row in (-120, 0, 120):
-        c.drawCentredString(0, row, SITE_URL)
+    c.setDash(3, 3)
+    c.setLineWidth(0.6)
+    c.setStrokeColor(COLORS['perforation'])
+
+    # Lignes verticales : bords + gouttière centrale
+    for x in (x_left, x_mid, x_right):
+        c.line(x, y_bottom, x, y_top)
+
+    # Lignes horizontales : haut, gouttières entre lignes, bas
+    y_lines = [y_top]
+    for r in range(1, rows_filled):
+        y = page_height - margin_top - r * ticket_h - (r - 1) * gap_y - gap_y / 2
+        y_lines.append(y)
+    y_lines.append(y_bottom)
+    for y in y_lines:
+        c.line(x_left, y, x_right, y)
+
+    c.setDash()
+
+    # Ciseaux sur la gouttière verticale et au bord des lignes horizontales
+    c.setFillColor(COLORS['perforation'])
+    c.setFont("Helvetica", 7)
+    for y in y_lines:
+        c.drawCentredString(x_left - 3 * mm, y - 2, "✂")
+    for r in range(1, rows_filled):
+        y = page_height - margin_top - r * ticket_h - (r - 1) * gap_y - gap_y / 2
+        c.drawCentredString(x_mid, y - 2, "✂")
     c.restoreState()
 
 
@@ -240,8 +275,6 @@ def generate_tickets_pdf(match, config, tickets_data):
     total = len(tickets_data)
     idx = 0
     while idx < total:
-        _draw_page_watermark(c, width, height)
-
         c.setFont("Helvetica-Bold", 11)
         c.setFillColor(COLORS['primary_dark'])
         c.drawString(margin_x, height - 10 * mm,
@@ -251,7 +284,7 @@ def generate_tickets_pdf(match, config, tickets_data):
         page_num = idx // TICKETS_PER_PAGE + 1
         total_pages = (total + TICKETS_PER_PAGE - 1) // TICKETS_PER_PAGE
         c.drawRightString(width - margin_x, height - 10 * mm,
-                          f"{SITE_URL}   ·   Page {page_num}/{total_pages}")
+                          f"Page {page_num}/{total_pages}")
 
         for row in range(ROWS):
             for col in range(COLS):

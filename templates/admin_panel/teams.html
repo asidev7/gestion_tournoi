@@ -47,6 +47,9 @@
                 {% if team.player_count >= 12 %}bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none{% else %}bg-black text-white hover:bg-gray-800{% endif %}">
         <i class="fas fa-user-plus mr-1"></i>Joueur
       </a>
+      <a href="{% url 'admin_team_contract' team.pk %}" target="_blank" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors accent-green" title="Contrat PDF">
+        <i class="fas fa-file-contract mr-1"></i>Contrat
+      </a>
       <a href="{% url 'admin_edit_team' team.pk %}" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
         <i class="fas fa-edit mr-1"></i>Modifier
       </a>

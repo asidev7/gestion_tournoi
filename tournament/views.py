@@ -12,6 +12,7 @@ from .forms import (TeamForm, PlayerForm, MatchForm, GoalForm,
 from .models import (Tournament, Group, Team, Player, Match, Goal, Standing,
                      KnockoutMatch, TeamRegistration, TicketConfig, Ticket, PlayerVote)
 from .pdf_generator import generate_tickets_pdf, generate_ticket_preview
+from .contracts import generate_team_contract_pdf, generate_matches_table_pdf
 from django.db import IntegrityError
 import json
 import uuid
@@ -571,6 +572,42 @@ def admin_matches(request):
         'home_team', 'away_team', 'group'
     ).order_by('match_date') if tournament else []
     return render(request, 'admin_panel/matches.html', {'matches': matches, 'tournament': tournament})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_team_contract(request, pk):
+    """Génère le contrat d'engagement PDF d'une équipe."""
+    team = get_object_or_404(Team, pk=pk)
+    pdf = generate_team_contract_pdf(team)
+    filename = f'contrat_{team.name}.pdf'.replace(' ', '_')
+    resp = HttpResponse(pdf.getvalue(), content_type='application/pdf')
+    resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return resp
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_matches_pdf(request):
+    """Page de sélection des matchs + génération d'un tableau PDF."""
+    tournament = get_active_tournament()
+    matches = (
+        Match.objects.filter(tournament=tournament)
+        .select_related('home_team', 'away_team', 'group')
+        .order_by('match_date')
+        if tournament else Match.objects.none()
+    )
+    if request.method == 'POST':
+        ids = request.POST.getlist('matches')
+        selected = matches.filter(pk__in=ids) if ids else matches
+        pdf = generate_matches_table_pdf(selected, tournament)
+        resp = HttpResponse(pdf.getvalue(), content_type='application/pdf')
+        resp['Content-Disposition'] = 'attachment; filename="tableau_matchs.pdf"'
+        return resp
+    return render(request, 'admin_panel/matches_pdf.html', {
+        'matches': matches,
+        'tournament': tournament,
+    })
 
 
 @login_required

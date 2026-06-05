@@ -35,9 +35,11 @@ urlpatterns = [
     path('admin-panel/teams/<int:pk>/delete/', views.admin_delete_team, name='admin_delete_team'),
     path('admin-panel/teams/<int:team_pk>/players/add/', views.admin_add_player, name='admin_add_player'),
     path('admin-panel/teams/distribute/', views.admin_distribute_groups, name='admin_distribute_groups'),
+    path('admin-panel/teams/<int:pk>/contract/', views.admin_team_contract, name='admin_team_contract'),
     path('admin-panel/players/<int:pk>/delete/', views.admin_delete_player, name='admin_delete_player'),
 
     path('admin-panel/matches/', views.admin_matches, name='admin_matches'),
+    path('admin-panel/matches/pdf/', views.admin_matches_pdf, name='admin_matches_pdf'),
     path('admin-panel/matches/add/', views.admin_add_match, name='admin_add_match'),
     path('admin-panel/matches/<int:pk>/edit/', views.admin_edit_match, name='admin_edit_match'),
     path('admin-panel/matches/<int:pk>/live/', views.admin_set_live, name='admin_set_live'),

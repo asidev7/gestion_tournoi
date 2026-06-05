@@ -107,7 +107,7 @@
 
   <!-- ══ FÉLICITATIONS ══ -->
   {% if champion or top_scorer or motm_match %}
-  <section class="mb-12">
+  <section class="mb-12" data-celebrate>
     <h2 class="section-title mb-4 flex items-center gap-2"><span class="poster-trophy text-2xl">🎉</span> Félicitations</h2>
     <div class="grid gap-4 md:grid-cols-3">
 
@@ -300,4 +300,26 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function rainCelebration() {
+    const icons = ['🎉','🏆','⭐','🥳','⚽','🎊'];
+    for (let i = 0; i < 46; i++) {
+      const el = document.createElement('div');
+      el.className = 'fall-icon';
+      el.textContent = icons[Math.floor(Math.random() * icons.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.fontSize = (16 + Math.random() * 24) + 'px';
+      el.style.setProperty('--dur', (3 + Math.random() * 3.5) + 's');
+      el.style.setProperty('--delay', (Math.random() * 2.5) + 's');
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.querySelector('[data-celebrate]')) rainCelebration();
+  });
+</script>
 {% endblock %}
