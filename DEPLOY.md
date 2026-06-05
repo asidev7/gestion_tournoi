@@ -9,6 +9,27 @@ Chemin cible sur le VPS : `/var/www/tournoi-adeib`
 
 ---
 
+## ⚡ Déploiement automatique (recommandé)
+
+Un script automatise les étapes 1 à 8. Sur le VPS :
+
+```bash
+# 1. Cloner le repo (une seule fois)
+sudo git clone https://github.com/asidev7/gestion_tournoi.git /var/www/tournoi-adeib
+
+# 2. Lancer le script (installe paquets, venv, migrations, Gunicorn, Nginx)
+sudo bash /var/www/tournoi-adeib/deploy/deploy.sh
+```
+
+Le script génère automatiquement une clé secrète, démarre en HTTP, puis
+affiche les **3 commandes finales** pour activer le HTTPS (certbot).
+Relancer `deploy.sh` après chaque `git push` met le site à jour.
+
+Les sections ci-dessous décrivent les **mêmes étapes en manuel**, utiles
+pour comprendre ou dépanner.
+
+---
+
 ## Étape 0 — Pré-requis (à faire AVANT)
 
 1. **DNS** : chez votre registrar, créez deux enregistrements A pointant vers l'IP de votre VPS :
