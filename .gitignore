@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environnements virtuels
+env/
+venv/
+.venv/
+
+# Django
+staticfiles/
+*.log
+
+# Secrets (NE JAMAIS committer)
+.env
+
+# OS / éditeurs
+.DS_Store
+*.swp

@@ -19,6 +19,17 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Origines de confiance pour la protection CSRF (requis par Django 4+ en HTTPS).
+# Doit inclure le schéma https:// — ex: https://tournoi-adeib.site
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        'DJANGO_CSRF_TRUSTED_ORIGINS',
+        'https://tournoi-adeib.site,https://www.tournoi-adeib.site',
+    ).split(',')
+    if origin.strip()
+]
+
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -101,6 +112,9 @@ if DEBUG or IS_RUNSERVER:
     CSRF_COOKIE_SECURE = False
 
 if not DEBUG and not IS_RUNSERVER:
+    # Derrière Nginx (reverse proxy SSL), reconnaître le HTTPS via l'en-tête transmis.
+    # Indispensable pour éviter une boucle de redirection avec SECURE_SSL_REDIRECT.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '31536000'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get(
         'DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS',
