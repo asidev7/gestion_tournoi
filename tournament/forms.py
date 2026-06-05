@@ -30,30 +30,50 @@ class TournamentForm(forms.ModelForm):
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields = ['name', 'logo', 'group']
+        fields = ['name', 'logo', 'group', 'coach_name', 'president_name']
+        labels = {
+            'coach_name': 'Entraîneur (optionnel)',
+            'president_name': 'Président (optionnel)',
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['group'].queryset = Group.objects.all()
         self.fields['group'].required = False
+        self.fields['coach_name'].required = False
+        self.fields['president_name'].required = False
 
 
 class PlayerForm(forms.ModelForm):
     class Meta:
         model = Player
-        fields = ['first_name', 'last_name', 'age', 'position', 'jersey_number', 'photo', 'is_captain']
+        fields = ['first_name', 'last_name', 'nickname', 'age', 'position',
+                  'jersey_number', 'photo', 'is_captain', 'yellow_cards', 'red_cards']
         widgets = {
             'age': forms.NumberInput(attrs={'min': 15, 'max': 40}),
             'jersey_number': forms.NumberInput(attrs={'min': 1, 'max': 99}),
+            'yellow_cards': forms.NumberInput(attrs={'min': 0, 'max': 50}),
+            'red_cards': forms.NumberInput(attrs={'min': 0, 'max': 20}),
         }
+        labels = {
+            'nickname': 'Surnom (nom de maillot)',
+            'yellow_cards': 'Cartons jaunes',
+            'red_cards': 'Cartons rouges',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['nickname'].required = False
 
 
 class MatchForm(forms.ModelForm):
     class Meta:
         model = Match
-        fields = ['phase', 'group', 'home_team', 'away_team', 'match_date', 'venue', 'matchday', 'status']
+        fields = ['phase', 'group', 'home_team', 'away_team', 'match_date', 'venue',
+                  'matchday', 'status', 'stream_platform', 'stream_url']
         widgets = {
             'match_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'stream_url': forms.URLInput(attrs={'placeholder': 'https://youtube.com/watch?v=...'}),
         }
 
     def __init__(self, *args, tournament=None, **kwargs):
@@ -76,10 +96,38 @@ class MatchForm(forms.ModelForm):
 class ScoreUpdateForm(forms.ModelForm):
     class Meta:
         model = Match
-        fields = ['home_score', 'away_score', 'status']
+        fields = ['home_score', 'away_score', 'status', 'man_of_the_match']
         widgets = {
             'home_score': forms.NumberInput(attrs={'min': 0}),
             'away_score': forms.NumberInput(attrs={'min': 0}),
+        }
+        labels = {
+            'man_of_the_match': 'Homme du match',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['man_of_the_match'].required = False
+        if self.instance and self.instance.pk:
+            self.fields['man_of_the_match'].queryset = Player.objects.filter(
+                team__in=[self.instance.home_team, self.instance.away_team]
+            )
+
+
+class MatchLiveForm(forms.ModelForm):
+    """Passer un match en direct et renseigner le lien de diffusion."""
+    class Meta:
+        model = Match
+        fields = ['stream_platform', 'stream_url']
+        widgets = {
+            'stream_url': forms.URLInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'https://youtube.com/watch?v=...',
+            }),
+        }
+        labels = {
+            'stream_platform': 'Plateforme',
+            'stream_url': 'Lien du direct',
         }
 
 
@@ -116,9 +164,9 @@ class KnockoutMatchForm(forms.ModelForm):
 class TicketConfigForm(forms.ModelForm):
     class Meta:
         model = TicketConfig
-        fields = ['price', 'currency', 'ticket_size', 'quantity', 'gate_opens', 'gate_closes', 'ticket_text', 'is_active']
+        fields = ['price', 'currency', 'quantity', 'gate_opens', 'gate_closes', 'ticket_text', 'is_active']
         widgets = {
-            'price': forms.NumberInput(attrs={'min': 0, 'step': 100}),
+            'price': forms.NumberInput(attrs={'min': 0, 'step': 50}),
             'quantity': forms.NumberInput(attrs={'min': 1, 'max': 10000}),
             'gate_opens': forms.TimeInput(attrs={'type': 'time'}),
             'gate_closes': forms.TimeInput(attrs={'type': 'time'}),
@@ -127,7 +175,6 @@ class TicketConfigForm(forms.ModelForm):
         labels = {
             'price': 'Prix du ticket',
             'currency': 'Devise',
-            'ticket_size': 'Taille des tickets',
             'quantity': 'Quantité à générer',
             'gate_opens': 'Ouverture des portes',
             'gate_closes': 'Fermeture des portes',

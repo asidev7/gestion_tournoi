@@ -48,11 +48,11 @@ class Command(BaseCommand):
         random.seed(26)
 
         tournament, _ = Tournament.objects.get_or_create(
-            name="ADEIB U26 Illara",
+            name="Cup Legends",
             defaults={
-                "edition": "2026",
+                "edition": "Saison 2026",
                 "location": "Illara",
-                "description": "Données de démonstration pour tester l’application.",
+                "description": "Tournoi de football Cup Legends — données de démonstration.",
                 "is_active": True,
             },
         )
@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
         # Teams
         team_names = {
-            "A": ["Illara FC", "ADEIB Lions", "Jeunes Espoirs", "Étoiles d'Or"],
+            "A": ["Illara FC", "City Lions", "Jeunes Espoirs", "Étoiles d'Or"],
             "B": ["Royal United", "Académie Nord", "Sporting Porto", "Les Aigles"],
             "C": ["Olympic Sud", "River Plate", "Atlas FC", "Phoenix Club"],
         }
@@ -137,7 +137,7 @@ class Command(BaseCommand):
                         defaults={
                             "matchday": matchday,
                             "match_date": now + timedelta(days=matchday),
-                            "venue": "Terrain ADEIB, Illara",
+                            "venue": "Stade Cup Legends",
                             "status": "SCHEDULED",
                         },
                     )

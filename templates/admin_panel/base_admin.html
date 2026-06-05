@@ -8,13 +8,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Plus+Jakarta+Sans:wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    /* Typography */
-    body { font-family: 'Roboto', sans-serif; }
-    h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Poppins', sans-serif; }
+    /* Typography — identique au site public */
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
 
     /* Custom scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -39,25 +39,27 @@
     .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
 
-    /* Sidebar styles */
+    /* Sidebar styles — vert plat (pas de dégradé) */
     .sidebar {
-      background: #0d5c2e;
+      background: #0d7a3c;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sidebar-link {
       position: relative;
+      border-radius: 14px;
       transition: all 0.2s ease;
     }
 
     .sidebar-link::before {
       content: '';
       position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
+      left: 6px;
+      top: 18%;
+      bottom: 18%;
       width: 4px;
-      background: white;
+      border-radius: 4px;
+      background: #e7b84b;
       transform: scaleY(0);
       transition: transform 0.2s ease;
     }
@@ -67,53 +69,42 @@
       transform: scaleY(1);
     }
 
-    .sidebar-link:hover,
+    .sidebar-link:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateX(2px);
+    }
     .sidebar-link.active {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    }
+    .sidebar-link .ic {
+      transition: all 0.2s ease;
+    }
+    .sidebar-link.active .ic,
+    .sidebar-link:hover .ic {
+      background: #e7b84b !important;
+      color: #053d1d !important;
     }
 
-    /* Glass effect */
-    .glass {
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    /* Topbar plat (ex-glass, sans flou ni dégradé) */
+    .glass { background: #ffffff; }
 
     /* Card hover effects */
-    .hover-lift {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    .hover-lift { transition: all 0.25s ease; }
     .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 34px rgba(3,33,15,0.14);
     }
 
-    /* Button effects */
-    .btn-shine {
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-shine::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -100%;
-      width: 50%;
-      height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transform: rotate(25deg);
-      transition: left 0.6s ease;
-    }
-    .btn-shine:hover::after {
-      left: 150%;
+    .btn-shine { position: relative; }
+
+    /* Cartes type site public */
+    .card-flat {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
     }
 
     /* Mobile overlay */
-    .sidebar-overlay {
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
+    .sidebar-overlay { background: rgba(0,0,0,0.45); }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -126,13 +117,14 @@
 <aside id="adminSidebar" class="sidebar fixed top-0 left-0 h-full w-72 z-40 -translate-x-full lg:translate-x-0 shadow-2xl flex flex-col">
 
   <!-- Logo -->
-  <div class="flex items-center gap-4 px-6 py-6 border-b border-white/20">
-    <div class="w-12 h-12 bg-white flex items-center justify-center text-[#0d5c2e] font-black text-2xl shadow-lg">
-      A
+  <div class="flex items-center gap-4 px-6 py-6 border-b border-white/15">
+    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
+      <img src="{% static 'images/adeib_logo.png' %}" alt="ADEIB" class="w-full h-full object-contain p-1"
+           onerror="this.outerHTML='<span class=\'text-[#0d7a3c] font-black text-2xl\'>A</span>'">
     </div>
     <div>
       <div class="text-white font-heading font-black text-lg leading-tight">ADEIB U26</div>
-      <div class="text-white/70 text-xs tracking-widest uppercase font-medium">Administration</div>
+      <div class="text-[#e7b84b] text-xs tracking-widest uppercase font-semibold">Administration</div>
     </div>
   </div>
 
@@ -141,82 +133,58 @@
 
     <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider">Principal</div>
 
-    <a href="{% url 'admin_dashboard' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-tachometer-alt text-lg"></i>
-      </div>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-tachometer-alt text-lg"></i></div>
       <span>Tableau de bord</span>
     </a>
 
-    <a href="{% url 'admin_tournament_setup' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-trophy text-lg"></i>
-      </div>
+    <a href="{% url 'admin_tournament_setup' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-trophy text-lg"></i></div>
       <span>Tournoi</span>
     </a>
 
-    <a href="{% url 'admin_teams' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-users text-lg"></i>
-      </div>
-      <span>Équipes & Joueurs</span>
+    <a href="{% url 'admin_teams' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-users text-lg"></i></div>
+      <span>Équipes &amp; Joueurs</span>
     </a>
 
-    <a href="{% url 'admin_matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-futbol text-lg"></i>
-      </div>
+    <a href="{% url 'admin_distribute_groups' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium"
+       onclick="return confirm('Répartir automatiquement les équipes en poules de 4 ?');">
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-shuffle text-lg"></i></div>
+      <span>Répartir en poules</span>
+    </a>
+
+    <a href="{% url 'admin_matches' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-futbol text-lg"></i></div>
       <span>Matchs</span>
     </a>
 
-    <a href="{% url 'admin_tickets' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-ticket-alt text-lg"></i>
-      </div>
-      <span>Tickets Standard</span>
+    <a href="{% url 'admin_tickets' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium" data-sidebar>
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-ticket-alt text-lg"></i></div>
+      <span>Tickets</span>
     </a>
 
-    <a href="{% url 'admin_ticket_designer' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium" data-sidebar>
-      <div class="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4d03f] rounded-lg flex items-center justify-center">
-        <i class="fas fa-magic text-lg"></i>
-      </div>
-      <span>Designer Tickets ✨</span>
-    </a>
+    <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider mt-5">Génération</div>
 
-    <a href="{% url 'admin_generate_matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-magic text-lg"></i>
-      </div>
+    <a href="{% url 'admin_generate_matches' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium">
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-wand-magic-sparkles text-lg"></i></div>
       <span>Générer matchs</span>
     </a>
 
-    <a href="{% url 'admin_generate_knockout' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-sitemap text-lg"></i>
-      </div>
+    <a href="{% url 'admin_generate_knockout' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium">
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-sitemap text-lg"></i></div>
       <span>Phase finale</span>
     </a>
 
-    <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider mt-6">Site public</div>
+    <div class="px-3 py-2 text-white/50 text-xs font-bold uppercase tracking-wider mt-5">Site public</div>
 
-    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-home text-lg"></i>
-      </div>
+    <a href="{% url 'home' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium">
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-home text-lg"></i></div>
       <span>Accueil</span>
     </a>
 
-    <a href="{% url 'matches' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-list text-lg"></i>
-      </div>
-      <span>Voir les matchs</span>
-    </a>
-
-    <a href="{% url 'bracket' %}" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl text-white/90 hover:text-white font-medium">
-      <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-        <i class="fas fa-sitemap text-lg"></i>
-      </div>
+    <a href="{% url 'bracket' %}" class="sidebar-link flex items-center gap-4 px-3 py-2.5 text-white/90 hover:text-white font-medium">
+      <div class="ic w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center"><i class="fas fa-trophy text-lg"></i></div>
       <span>Bracket</span>
     </a>
   </nav>
@@ -243,7 +211,7 @@
 
   <!-- Top bar -->
   <header class="glass sticky top-0 z-20 border-b border-gray-200 px-4 lg:px-8 h-16 flex items-center gap-4">
-    <button id="sidebarToggle" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
+    <button id="sbToggleBtn" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
       <i class="fas fa-bars text-lg"></i>
     </button>
 

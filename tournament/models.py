@@ -5,8 +5,42 @@ import io
 from django.core.files.base import ContentFile
 
 
+STREAM_PLATFORM_CHOICES = [
+    ('YOUTUBE', 'YouTube'),
+    ('FACEBOOK', 'Facebook'),
+    ('TWITCH', 'Twitch'),
+    ('OTHER', 'Autre'),
+]
+
+
+def build_embed_url(platform, url):
+    """Transforme une URL de stream publique en URL embarquable (iframe)."""
+    if not url:
+        return ''
+    if platform == 'YOUTUBE':
+        video_id = ''
+        if 'watch?v=' in url:
+            video_id = url.split('watch?v=')[1].split('&')[0]
+        elif 'youtu.be/' in url:
+            video_id = url.split('youtu.be/')[1].split('?')[0]
+        elif '/live/' in url:
+            video_id = url.split('/live/')[1].split('?')[0]
+        elif '/embed/' in url:
+            return url
+        if video_id:
+            return f'https://www.youtube.com/embed/{video_id}'
+        return url
+    if platform == 'FACEBOOK':
+        from urllib.parse import quote
+        return f'https://www.facebook.com/plugins/video.php?href={quote(url, safe="")}&show_text=false'
+    if platform == 'TWITCH':
+        channel = url.rstrip('/').split('/')[-1].split('?')[0]
+        return f'https://player.twitch.tv/?channel={channel}&parent=localhost'
+    return url
+
+
 class Tournament(models.Model):
-    name = models.CharField(max_length=200, default='ADEIB U26 Illara')
+    name = models.CharField(max_length=200, default='Cup Legends')
     edition = models.CharField(max_length=100, blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -23,7 +57,10 @@ class Tournament(models.Model):
 
 
 class Group(models.Model):
-    GROUP_CHOICES = [('A', 'Groupe A'), ('B', 'Groupe B'), ('C', 'Groupe C')]
+    GROUP_CHOICES = [
+        ('A', 'Groupe A'), ('B', 'Groupe B'), ('C', 'Groupe C'),
+        ('D', 'Groupe D'), ('E', 'Groupe E'), ('F', 'Groupe F'),
+    ]
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='groups')
     name = models.CharField(max_length=1, choices=GROUP_CHOICES)
 
@@ -40,6 +77,8 @@ class Team(models.Model):
     name = models.CharField(max_length=200)
     logo = models.ImageField(upload_to='teams/', blank=True, null=True)
     group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True, related_name='teams')
+    coach_name = models.CharField(max_length=200, blank=True, verbose_name='Entraîneur')
+    president_name = models.CharField(max_length=200, blank=True, verbose_name='Président')
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -48,7 +87,7 @@ class Team(models.Model):
 
     def generate_qr_code(self):
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(f'Équipe: {self.name} | Tournoi: ADEIB U26 Illara')
+        qr.add_data(f'Équipe: {self.name} | Tournoi: Cup Legends')
         qr.make(fit=True)
         img = qr.make_image(fill='black', back_color='white')
         buffer = io.BytesIO()
@@ -75,11 +114,14 @@ class Player(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='players')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    nickname = models.CharField(max_length=100, blank=True, verbose_name='Surnom (nom de maillot)')
     age = models.PositiveIntegerField()
     position = models.CharField(max_length=3, choices=POSITION_CHOICES, default='MID')
     jersey_number = models.PositiveIntegerField(null=True, blank=True)
     photo = models.ImageField(upload_to='players/', blank=True, null=True)
     is_captain = models.BooleanField(default=False)
+    yellow_cards = models.PositiveIntegerField(default=0, verbose_name='Cartons jaunes')
+    red_cards = models.PositiveIntegerField(default=0, verbose_name='Cartons rouges')
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
@@ -87,6 +129,10 @@ class Player(models.Model):
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    @property
+    def display_name(self):
+        return self.nickname or self.full_name
 
     @property
     def goals_count(self):
@@ -118,15 +164,31 @@ class Match(models.Model):
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
     match_date = models.DateTimeField(null=True, blank=True)
-    venue = models.CharField(max_length=200, blank=True, default='Terrain ADEIB, Illara')
+    venue = models.CharField(max_length=200, blank=True, default='Stade Cup Legends')
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='SCHEDULED')
     matchday = models.PositiveIntegerField(default=1)
     live_started_at = models.DateTimeField(null=True, blank=True)
+    stream_url = models.URLField(blank=True, null=True, verbose_name='Lien de diffusion')
+    stream_platform = models.CharField(
+        max_length=10, choices=STREAM_PLATFORM_CHOICES, default='YOUTUBE',
+        blank=True, verbose_name='Plateforme de diffusion',
+    )
+    man_of_the_match = models.ForeignKey(
+        'Player', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='motm_awards', verbose_name='Homme du match',
+    )
 
     def __str__(self):
         return f'{self.home_team} vs {self.away_team}'
+
+    @property
+    def is_live(self):
+        return self.status == 'LIVE'
+
+    def get_embed_url(self):
+        return build_embed_url(self.stream_platform, self.stream_url)
 
     @property
     def result(self):
@@ -249,13 +311,25 @@ class KnockoutMatch(models.Model):
     away_penalties = models.PositiveIntegerField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='SCHEDULED')
     match_date = models.DateTimeField(null=True, blank=True)
-    venue = models.CharField(max_length=200, blank=True, default='Terrain ADEIB, Illara')
+    venue = models.CharField(max_length=200, blank=True, default='Stade Cup Legends')
     winner = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='knockout_wins')
+    stream_url = models.URLField(blank=True, null=True, verbose_name='Lien de diffusion')
+    stream_platform = models.CharField(
+        max_length=10, choices=STREAM_PLATFORM_CHOICES, default='YOUTUBE',
+        blank=True, verbose_name='Plateforme de diffusion',
+    )
 
     def __str__(self):
         ht = self.home_team.name if self.home_team else 'TBD'
         at = self.away_team.name if self.away_team else 'TBD'
         return f'{self.get_round_display()}: {ht} vs {at}'
+
+    @property
+    def is_live(self):
+        return self.status == 'LIVE'
+
+    def get_embed_url(self):
+        return build_embed_url(self.stream_platform, self.stream_url)
 
     def determine_winner(self):
         if self.status == 'FINISHED':
@@ -303,13 +377,12 @@ class TeamRegistration(models.Model):
 
 
 class TicketConfig(models.Model):
-    """Configuration de génération de tickets pour un match"""
-    TICKET_SIZES = [
-        ('small', 'Petit (10 par page)'),
-        ('medium', 'Moyen (6 par page)'),
-        ('large', 'Grand (4 par page)'),
-        ('premium', 'Premium A4 Paysage (2 par page)'),
-    ]
+    """Configuration de génération de tickets pour un match.
+
+    Un seul format : 10 tickets par page A4 (portrait, 2 colonnes).
+    Le prix est dynamique (par défaut 200 ₦).
+    """
+    TICKETS_PER_PAGE = 10
 
     CURRENCY_CHOICES = [
         ('NGN', 'Naira (₦)'),
@@ -317,9 +390,8 @@ class TicketConfig(models.Model):
     ]
 
     match = models.OneToOneField(Match, on_delete=models.CASCADE, related_name='ticket_config')
-    price = models.DecimalField(max_digits=10, decimal_places=0, default=500, verbose_name='Prix')
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='XOF', verbose_name='Devise')
-    ticket_size = models.CharField(max_length=10, choices=TICKET_SIZES, default='small')
+    price = models.DecimalField(max_digits=10, decimal_places=0, default=200, verbose_name='Prix')
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='NGN', verbose_name='Devise')
     quantity = models.PositiveIntegerField(default=100, verbose_name='Quantité à générer')
     gate_opens = models.TimeField(default='13:00', verbose_name='Ouverture des portes')
     gate_closes = models.TimeField(default='19:00', verbose_name='Fermeture des portes')
@@ -369,3 +441,22 @@ class Ticket(models.Model):
     class Meta:
         verbose_name = 'Ticket'
         ordering = ['ticket_number']
+
+
+class PlayerVote(models.Model):
+    """Vote gratuit pour le meilleur joueur — 1 vote par appareil et par jour."""
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='player_votes')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='votes')
+    device_id = models.CharField(max_length=64, db_index=True)
+    vote_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.player} — {self.vote_date}'
+
+    class Meta:
+        verbose_name = 'Vote joueur'
+        verbose_name_plural = 'Votes joueurs'
+        # 1 seul vote par appareil et par jour (tout le tournoi confondu)
+        unique_together = ['tournament', 'device_id', 'vote_date']
+        ordering = ['-created_at']

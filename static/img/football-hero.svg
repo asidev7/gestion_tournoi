@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f7a3d"/>
+      <stop offset="1" stop-color="#064d24"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#03210f" stop-opacity="0.85"/>
+    </radialGradient>
+    <radialGradient id="spot" cx="50%" cy="0%" r="70%">
+      <stop offset="0" stop-color="#bdf5d0" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#bdf5d0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#grass)"/>
+
+  <!-- mowing stripes -->
+  <g opacity="0.10" fill="#ffffff">
+    <rect x="0"    y="0" width="200" height="900"/>
+    <rect x="400"  y="0" width="200" height="900"/>
+    <rect x="800"  y="0" width="200" height="900"/>
+    <rect x="1200" y="0" width="200" height="900"/>
+  </g>
+
+  <!-- pitch markings -->
+  <g fill="none" stroke="#ffffff" stroke-width="4" opacity="0.28">
+    <rect x="60" y="60" width="1480" height="780"/>
+    <line x1="800" y1="60" x2="800" y2="840"/>
+    <circle cx="800" cy="450" r="130"/>
+    <circle cx="800" cy="450" r="6" fill="#ffffff" stroke="none"/>
+    <!-- left box -->
+    <rect x="60" y="250" width="180" height="400"/>
+    <rect x="60" y="350" width="70" height="200"/>
+    <!-- right box -->
+    <rect x="1360" y="250" width="180" height="400"/>
+    <rect x="1470" y="350" width="70" height="200"/>
+  </g>
+
+  <rect width="1600" height="900" fill="url(#spot)"/>
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+</svg>

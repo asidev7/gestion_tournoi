@@ -2,258 +2,194 @@
 {% load static %}
 {% block title %}ADEIB U26 · Tournoi Illara{% endblock %}
 
-{% block extra_head %}
-<style>
-  .hero-bg {
-    background:
-      radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 28%),
-      radial-gradient(circle at bottom left, rgba(255, 214, 102, 0.12), transparent 22%),
-      linear-gradient(135deg, rgba(13, 92, 46, 0.98) 0%, rgba(7, 54, 26, 0.94) 100%);
-  }
-  @keyframes pulse-red {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  .live-dot {
-    animation: pulse-red 1.5s ease-in-out infinite;
-  }
-  .match-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .match-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 30px rgba(7, 54, 26, 0.08);
-    border-color: rgba(13, 92, 46, 0.18);
-  }
-  .score-live {
-    font-variant-numeric: tabular-nums;
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-<div>
-<section class="page-shell-wide pt-6">
-  <div class="hero-bg overflow-hidden rounded-[36px] px-6 py-10 text-white shadow-2xl shadow-green-950/20 md:px-10 md:py-14 xl:px-14">
-    <div class="hero-grid">
+
+<!-- ══ HERO PLEIN ÉCRAN ══ -->
+<section class="football-hero full-bleed">
+  <div class="page-shell-wide py-12 md:py-16">
+    <div class="grid items-center gap-8 lg:grid-cols-[1.15fr_.85fr]">
+
       <div>
-        <span class="site-chip mb-5">
+        <span class="site-chip mb-5 text-white">
           <i class="fas fa-futbol text-[11px]"></i>
           {% if tournament and tournament.location %}{{ tournament.location }}{% else %}Tournoi Officiel · Illara{% endif %}
         </span>
-        <h1 class="font-heading mb-3 max-w-3xl text-4xl font-black leading-tight md:text-6xl">
-          {% if tournament %}
-            {{ tournament.name }}
-          {% else %}
-            Tournoi ADEIB U26
-          {% endif %}
+
+        <h1 class="font-heading mb-3 max-w-2xl text-4xl font-black leading-[1.05] text-white md:text-6xl">
+          {% if tournament %}{{ tournament.name }}{% else %}Tournoi ADEIB U26{% endif %}
         </h1>
-        <p class="mb-3 text-xl font-semibold text-green-100 md:text-2xl">
-          {% if tournament and tournament.edition %}
-            {{ tournament.edition }}
-          {% else %}
-            Tournoi en cours
-          {% endif %}
+
+        <p class="mb-6 text-lg font-semibold text-white/85 md:text-xl">
+          {% if tournament and tournament.edition %}{{ tournament.edition }}{% else %}Saison en cours{% endif %}
         </p>
 
-        {% if tournament %}
-        <div class="mb-6 flex flex-wrap gap-3 text-sm text-white/90">
-          {% if tournament.start_date %}
-          <span class="site-chip !bg-white/10 !text-white"><i class="far fa-calendar"></i>{{ tournament.start_date|date:"d M Y" }}{% if tournament.end_date %} - {{ tournament.end_date|date:"d M Y" }}{% endif %}</span>
-          {% endif %}
-          {% if tournament.location %}
-          <span class="site-chip !bg-white/10 !text-white"><i class="fas fa-location-dot"></i>{{ tournament.location }}</span>
-          {% endif %}
-          <span class="site-chip !bg-white/10 !text-white"><i class="fas fa-trophy"></i>{% if stats.live %}Tournoi en direct{% else %}Tournoi actif{% endif %}</span>
-        </div>
-        {% endif %}
-
-        <p class="mb-8 max-w-3xl text-base leading-7 text-green-50/90 md:text-lg">
-          {% if tournament and tournament.description %}
-            {{ tournament.description|truncatechars:180 }}
-          {% elif tournament %}
-            Suivez le tournoi actuellement actif, les matchs en direct, le calendrier, les résultats et le classement sur une seule page.
-          {% else %}
-            Suivez les scores en direct, consultez les classements et revivez les meilleurs moments du tournoi.
-          {% endif %}
-        </p>
-
-        <div class="mb-8 grid gap-3 sm:grid-cols-3">
-          <div class="stat-pill">
-            <div class="text-3xl font-black">{{ stats.teams|default:0 }}</div>
-            <div class="mt-1 text-xs uppercase tracking-[0.2em] text-green-100">Équipes</div>
+        <div class="mb-8 flex max-w-md gap-3">
+          <div class="flex-1 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-center text-white">
+            <div class="text-2xl font-black md:text-3xl">{{ stats.teams|default:0 }}</div>
+            <div class="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/70">Équipes</div>
           </div>
-          <div class="stat-pill">
-            <div class="text-3xl font-black">{{ stats.matches|default:0 }}</div>
-            <div class="mt-1 text-xs uppercase tracking-[0.2em] text-green-100">Matchs</div>
+          <div class="flex-1 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-center text-white">
+            <div class="text-2xl font-black md:text-3xl">{{ stats.matches|default:0 }}</div>
+            <div class="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/70">Matchs</div>
           </div>
-          <div class="stat-pill">
-            <div class="text-3xl font-black {% if stats.live > 0 %}text-red-300{% endif %}">{{ stats.live|default:0 }}</div>
-            <div class="mt-1 text-xs uppercase tracking-[0.2em] text-green-100">En direct</div>
+          <div class="flex-1 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-center text-white">
+            <div class="text-2xl font-black md:text-3xl {% if stats.live > 0 %}text-red-300{% endif %}">{{ stats.live|default:0 }}</div>
+            <div class="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/70">En direct</div>
           </div>
         </div>
 
         <div class="flex flex-wrap gap-3">
-          <a href="{% url 'matches' %}" class="site-button">
-            Voir les matchs
-          </a>
-          <a href="{% url 'standings' %}" class="site-button-secondary">
-            Classements
-          </a>
+          <a href="{% url 'matches' %}" class="site-button">Voir les matchs</a>
+          <a href="{% url 'standings' %}" class="site-button-secondary">Classements</a>
         </div>
       </div>
 
+      <!-- carte match live / prochain -->
       <div>
-        {% if live_matches %}
-          <div class="rounded-[28px] border border-white/15 bg-white/10 p-6 backdrop-blur-sm">
-            <div class="mb-5 flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-red-400 live-dot"></span>
-              <span class="text-sm font-bold tracking-[0.18em] text-red-200">EN DIRECT</span>
-            </div>
-            {% with match=live_matches.0 %}
-            <div class="text-center">
-              <div class="mb-4 flex items-center justify-between gap-3">
-                <div class="text-center flex-1">
-                  <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
-                    {% if match.home_team.logo %}
-                    <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">
-                    {% else %}
-                    <span class="team-logo-fallback text-xl">{{ match.home_team.name|first|upper }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-sm font-medium">{{ match.home_team.name|truncatechars:12 }}</div>
-                </div>
-                <div class="rounded-3xl bg-white/10 px-4 py-3">
-                  <div class="score-live text-4xl font-black">{{ match.home_score }} - {{ match.away_score }}</div>
-                  <div class="mt-1 text-xs text-gray-200">{{ match.get_phase_display }}</div>
-                </div>
-                <div class="text-center flex-1">
-                  <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
-                    {% if match.away_team.logo %}
-                    <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">
-                    {% else %}
-                    <span class="team-logo-fallback text-xl">{{ match.away_team.name|first|upper }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-sm font-medium">{{ match.away_team.name|truncatechars:12 }}</div>
-                </div>
+        {% if live_matches %}{% with match=live_matches.0 %}
+        <div class="rounded-[26px] border border-white/15 bg-white/10 p-6 backdrop-blur-sm has-shadow">
+          <div class="mb-5 flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-red-400 live-dot"></span>
+            <span class="text-sm font-bold tracking-[0.18em] text-red-200">EN DIRECT</span>
+          </div>
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div class="flex-1 text-center">
+              <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
+                {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xl">{{ match.home_team.name|first|upper }}</span>{% endif %}
               </div>
-              <a href="{% url 'match_detail' match.pk %}" class="block rounded-full bg-white/20 py-3 text-center font-semibold text-white transition hover:bg-white/30">
-                Voir le match
-              </a>
+              <div class="text-sm font-medium text-white">{{ match.home_team.name|truncatechars:12 }}</div>
             </div>
-            {% endwith %}
-          </div>
-        {% elif next_matches %}
-          <div class="rounded-[28px] border border-white/15 bg-white/10 p-6 backdrop-blur-sm">
-            <div class="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-green-100">Prochain match</div>
-            {% with match=next_matches.0 %}
-            <div class="text-center">
-              <div class="mb-4 flex items-center justify-between gap-3">
-                <div class="text-center flex-1">
-                  <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
-                    {% if match.home_team.logo %}
-                    <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">
-                    {% else %}
-                    <span class="team-logo-fallback text-xl">{{ match.home_team.name|first|upper }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-sm font-medium">{{ match.home_team.name|truncatechars:12 }}</div>
-                </div>
-                <div class="rounded-3xl bg-white/10 px-4 py-3">
-                  <div class="text-2xl font-black">VS</div>
-                  <div class="mt-1 text-xs text-gray-200">
-                    {% if match.match_date %}{{ match.match_date|date:"d/m H:i" }}{% else %}Date à confirmer{% endif %}
-                  </div>
-                </div>
-                <div class="text-center flex-1">
-                  <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
-                    {% if match.away_team.logo %}
-                    <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">
-                    {% else %}
-                    <span class="team-logo-fallback text-xl">{{ match.away_team.name|first|upper }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-sm font-medium">{{ match.away_team.name|truncatechars:12 }}</div>
-                </div>
+            <div class="rounded-2xl bg-white/10 px-4 py-3 text-white">
+              <div class="score-live text-4xl font-black">{{ match.home_score }} - {{ match.away_score }}</div>
+            </div>
+            <div class="flex-1 text-center">
+              <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
+                {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xl">{{ match.away_team.name|first|upper }}</span>{% endif %}
               </div>
-              <a href="{% url 'matches' %}" class="block rounded-full bg-white/20 py-3 text-center font-semibold text-white transition hover:bg-white/30">
-                Voir le calendrier
-              </a>
+              <div class="text-sm font-medium text-white">{{ match.away_team.name|truncatechars:12 }}</div>
             </div>
-            {% endwith %}
           </div>
-        {% else %}
-          <div class="rounded-[28px] border border-white/15 bg-white/10 p-6 backdrop-blur-sm">
-            <div class="mb-2 text-sm font-bold uppercase tracking-[0.18em] text-green-100">Tournoi en cours</div>
-            <p class="text-sm leading-6 text-green-50/90">
-              {% if tournament %}
-                {{ tournament.name }}{% if tournament.edition %} · {{ tournament.edition }}{% endif %}{% if tournament.location %} à {{ tournament.location }}{% endif %}.
-              {% else %}
-                Les prochaines affiches, les résultats et les statistiques apparaîtront ici dès que les matchs seront publiés.
-              {% endif %}
-            </p>
+          <a href="{% url 'match_detail' match.pk %}" class="block rounded-full bg-white/20 py-3 text-center font-semibold text-white transition hover:bg-white/30">Suivre le match</a>
+        </div>
+        {% endwith %}
+        {% elif next_matches %}{% with match=next_matches.0 %}
+        <div class="rounded-[26px] border border-white/15 bg-white/10 p-6 backdrop-blur-sm has-shadow">
+          <div class="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-white/80">Prochain match</div>
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div class="flex-1 text-center">
+              <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
+                {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xl">{{ match.home_team.name|first|upper }}</span>{% endif %}
+              </div>
+              <div class="text-sm font-medium text-white">{{ match.home_team.name|truncatechars:12 }}</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 px-4 py-3 text-center text-white">
+              <div class="text-2xl font-black">VS</div>
+              <div class="mt-1 text-xs text-white/70">{% if match.match_date %}{{ match.match_date|date:"d/m H:i" }}{% else %}À confirmer{% endif %}</div>
+            </div>
+            <div class="flex-1 text-center">
+              <div class="team-logo mx-auto mb-2 h-14 w-14 bg-white/95">
+                {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xl">{{ match.away_team.name|first|upper }}</span>{% endif %}
+              </div>
+              <div class="text-sm font-medium text-white">{{ match.away_team.name|truncatechars:12 }}</div>
+            </div>
           </div>
+          <a href="{% url 'matches' %}" class="block rounded-full bg-white/20 py-3 text-center font-semibold text-white transition hover:bg-white/30">Voir le calendrier</a>
+        </div>
+        {% endwith %}
         {% endif %}
       </div>
+
     </div>
   </div>
 </section>
 
 <div class="page-shell-wide py-10">
 
+  <!-- ══ FÉLICITATIONS ══ -->
+  {% if champion or top_scorer or motm_match %}
+  <section class="mb-12">
+    <h2 class="section-title mb-4 flex items-center gap-2"><span class="poster-trophy text-2xl">🎉</span> Félicitations</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+
+      {% if champion %}
+      <div class="poster poster-champion has-shadow">
+        <div>
+          <div class="poster-eyebrow">🏆 Champion du tournoi</div>
+          <div class="poster-name mt-3">{{ champion.name }}</div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <div class="team-logo h-12 w-12 bg-white">
+            {% if champion.logo %}<img src="{{ champion.logo.url }}" alt="">{% else %}<span class="team-logo-fallback">{{ champion.name|first|upper }}</span>{% endif %}
+          </div>
+          <span class="text-sm font-semibold">Vainqueur de la finale</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if top_scorer %}
+      <div class="poster poster-scorer has-shadow">
+        <div>
+          <div class="poster-eyebrow">⚽ Meilleur buteur</div>
+          <div class="poster-name mt-3">{{ top_scorer.full_name }}</div>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <span class="text-sm font-semibold text-white/85">{{ top_scorer.team.name }}</span>
+          <span class="rounded-full bg-white/20 px-3 py-1 text-lg font-black">{{ top_scorer.goal_count }} buts</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if motm_match %}
+      <div class="poster poster-motm has-shadow">
+        <div>
+          <div class="poster-eyebrow">⭐ Homme du match</div>
+          <div class="poster-name mt-3">{{ motm_match.man_of_the_match.full_name }}</div>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <span class="text-sm font-semibold text-white/85">{{ motm_match.man_of_the_match.team.name }}</span>
+          <span class="text-xs text-white/65">{{ motm_match.home_team.name|truncatechars:8 }} v {{ motm_match.away_team.name|truncatechars:8 }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══ SPORT LIVE REELS ══ -->
   {% if live_matches %}
-  <section class="mb-10">
+  <section class="mb-12">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="section-title flex items-center gap-2">
-        <span class="h-3 w-3 rounded-full bg-red-500 live-dot"></span>
-        Matchs en direct
+        <span class="h-3 w-3 rounded-full bg-red-500 live-dot"></span> Sport en direct
       </h2>
-      <span class="text-sm text-gray-500">{{ live_matches|length }} en cours</span>
+      <a href="{% url 'live' %}" class="text-sm text-gray-600 hover:text-gray-900">Tout voir →</a>
     </div>
-
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {% for match in live_matches %}
-      <a href="{% url 'match_detail' match.pk %}" class="site-card match-card block p-5">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ match.get_phase_display }}</span>
-          <span class="flex items-center gap-1 text-xs font-bold text-red-600">
-            <span class="w-2 h-2 bg-red-500 rounded-full live-dot"></span>
-            LIVE
-          </span>
+      <a href="{% url 'match_detail' match.pk %}" class="match-tile block p-5 no-underline">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ match.get_phase_display }}</span>
+          <span class="live-pill"><span class="live-dot"></span>LIVE</span>
         </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3 flex-1">
-            <div class="team-logo h-11 w-11">
-              {% if match.home_team.logo %}
-              <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}">
-              {% else %}
-              <span class="team-logo-fallback text-sm">{{ match.home_team.name|first|upper }}</span>
-              {% endif %}
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex flex-1 flex-col items-center gap-2 text-center">
+            <div class="team-logo h-12 w-12">
+              {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback">{{ match.home_team.name|first|upper }}</span>{% endif %}
             </div>
-            <span class="font-semibold text-gray-900">{{ match.home_team.name|truncatechars:15 }}</span>
+            <span class="text-xs font-bold text-gray-800">{{ match.home_team.name|truncatechars:12 }}</span>
           </div>
-
-          <div class="px-4">
-            <span class="text-3xl font-bold text-gray-900 score-live">{{ match.home_score }} - {{ match.away_score }}</span>
-          </div>
-
-          <div class="flex items-center gap-3 flex-1 justify-end">
-            <span class="font-semibold text-gray-900">{{ match.away_team.name|truncatechars:15 }}</span>
-            <div class="team-logo h-11 w-11">
-              {% if match.away_team.logo %}
-              <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}">
-              {% else %}
-              <span class="team-logo-fallback text-sm">{{ match.away_team.name|first|upper }}</span>
-              {% endif %}
+          <div class="score-live text-3xl font-black text-gray-900">{{ match.home_score }}<span class="mx-1 text-gray-300">-</span>{{ match.away_score }}</div>
+          <div class="flex flex-1 flex-col items-center gap-2 text-center">
+            <div class="team-logo h-12 w-12">
+              {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback">{{ match.away_team.name|first|upper }}</span>{% endif %}
             </div>
+            <span class="text-xs font-bold text-gray-800">{{ match.away_team.name|truncatechars:12 }}</span>
           </div>
         </div>
-
-        <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <span><i class="fas fa-map-marker-alt mr-1"></i>{{ match.venue|default:"Terrain ADEIB"|truncatechars:25 }}</span>
-          <span>{{ match.match_date|date:"H:i" }}</span>
+        <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-500">
+          <span><i class="fas fa-map-marker-alt mr-1 accent-green"></i>{{ match.venue|default:"Terrain ADEIB"|truncatechars:22 }}</span>
+          {% if match.stream_url %}<span class="accent-green font-semibold"><i class="fas fa-video mr-1"></i>Stream</span>{% endif %}
         </div>
       </a>
       {% endfor %}
@@ -261,49 +197,40 @@
   </section>
   {% endif %}
 
-  <div class="grid lg:grid-cols-3 gap-6">
+  <!-- ══ MATCHS & BUTEURS ══ -->
+  <div class="grid gap-6 lg:grid-cols-3">
 
-    <div class="lg:col-span-2 space-y-6">
+    <div class="space-y-6 lg:col-span-2">
       <section class="site-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h3 class="section-title text-[1.15rem]">Prochains matchs</h3>
           <a href="{% url 'matches' %}" class="text-sm text-gray-600 hover:text-gray-900">Voir tout →</a>
         </div>
-
         <div class="divide-y divide-gray-100">
           {% for match in next_matches|slice:":5" %}
           <a href="{% url 'match_detail' match.pk %}" class="block px-5 py-4 transition-colors hover:bg-[#f7fbf8]">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 flex-1">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex flex-1 items-center gap-2">
+                <div class="team-logo h-8 w-8">
+                  {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xs">{{ match.home_team.name|first|upper }}</span>{% endif %}
+                </div>
                 <span class="font-semibold text-gray-900">{{ match.home_team.name }}</span>
               </div>
-
-              <div class="px-3 text-center">
-                <span class="text-sm font-bold text-gray-400">VS</span>
-              </div>
-
-              <div class="flex items-center gap-3 flex-1 justify-end">
+              <span class="text-sm font-bold text-gray-400">VS</span>
+              <div class="flex flex-1 items-center justify-end gap-2">
                 <span class="font-semibold text-gray-900">{{ match.away_team.name }}</span>
+                <div class="team-logo h-8 w-8">
+                  {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xs">{{ match.away_team.name|first|upper }}</span>{% endif %}
+                </div>
               </div>
             </div>
-
-            <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
-              <span class="flex items-center gap-2">
-                <i class="far fa-calendar"></i>
-                {% if match.match_date %}
-                  {{ match.match_date|date:"l d F Y"|capfirst }} à {{ match.match_date|date:"H:i" }}
-                {% else %}
-                  Date à confirmer
-                {% endif %}
-              </span>
-              <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">{{ match.get_phase_display }}</span>
+            <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+              <span><i class="far fa-calendar mr-1"></i>{% if match.match_date %}{{ match.match_date|date:"l d F · H:i"|capfirst }}{% else %}Date à confirmer{% endif %}</span>
+              <span class="rounded bg-gray-100 px-2 py-0.5">{{ match.get_phase_display }}</span>
             </div>
           </a>
           {% empty %}
-          <div class="p-8 text-center text-gray-400">
-            <i class="far fa-calendar-times text-3xl mb-2"></i>
-            <p>Aucun match programmé</p>
-          </div>
+          <div class="p-8 text-center text-gray-400"><i class="far fa-calendar-times mb-2 text-3xl"></i><p>Aucun match programmé</p></div>
           {% endfor %}
         </div>
       </section>
@@ -313,91 +240,63 @@
           <h3 class="section-title text-[1.15rem]">Derniers résultats</h3>
           <a href="{% url 'statistics' %}" class="text-sm text-gray-600 hover:text-gray-900">Stats →</a>
         </div>
-
         <div class="divide-y divide-gray-100">
           {% for match in recent_results|slice:":5" %}
           <a href="{% url 'match_detail' match.pk %}" class="block px-5 py-4 transition-colors hover:bg-[#f7fbf8]">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 flex-1">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex flex-1 items-center gap-2">
+                <div class="team-logo h-8 w-8">
+                  {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xs">{{ match.home_team.name|first|upper }}</span>{% endif %}
+                </div>
                 <span class="font-semibold text-gray-900">{{ match.home_team.name }}</span>
               </div>
-
-              <div class="px-3">
-                <span class="text-xl font-bold text-gray-900 score-live">{{ match.home_score }} - {{ match.away_score }}</span>
-              </div>
-
-              <div class="flex items-center gap-3 flex-1 justify-end">
+              <span class="score-live text-xl font-bold text-gray-900">{{ match.home_score }} - {{ match.away_score }}</span>
+              <div class="flex flex-1 items-center justify-end gap-2">
                 <span class="font-semibold text-gray-900">{{ match.away_team.name }}</span>
+                <div class="team-logo h-8 w-8">
+                  {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">{% else %}<span class="team-logo-fallback text-xs">{{ match.away_team.name|first|upper }}</span>{% endif %}
+                </div>
               </div>
             </div>
-
-            <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
-              <span><i class="far fa-calendar-check mr-1"></i>Terminé le {{ match.match_date|date:"d/m/Y" }}</span>
-              <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">{{ match.get_phase_display }}</span>
+            <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+              <span><i class="far fa-calendar-check mr-1"></i>{{ match.match_date|date:"d/m/Y" }}</span>
+              <span class="rounded bg-gray-100 px-2 py-0.5">{{ match.get_phase_display }}</span>
             </div>
           </a>
           {% empty %}
-          <div class="p-8 text-center text-gray-400">
-            <i class="fas fa-hourglass-start text-3xl mb-2"></i>
-            <p>Aucun résultat disponible</p>
-          </div>
+          <div class="p-8 text-center text-gray-400"><i class="fas fa-hourglass-start mb-2 text-3xl"></i><p>Aucun résultat disponible</p></div>
           {% endfor %}
         </div>
       </section>
     </div>
 
     <div class="space-y-6">
-
       {% if top_scorers %}
       <section class="site-card overflow-hidden">
-        <div class="border-b border-gray-100 p-5">
-          <h3 class="section-title text-[1.15rem]">Meilleurs buteurs</h3>
-        </div>
+        <div class="border-b border-gray-100 p-5"><h3 class="section-title text-[1.15rem]">Meilleurs buteurs</h3></div>
         <div class="divide-y divide-gray-100">
           {% for player in top_scorers|slice:":5" %}
           <div class="flex items-center justify-between px-5 py-4">
             <div class="flex items-center gap-3">
-              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#edf4ef] text-xs font-bold text-[#0d5c2e]">{{ forloop.counter }}</span>
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#edf4ef] text-xs font-bold accent-green">{{ forloop.counter }}</span>
               <div>
                 <div class="font-medium text-gray-900">{{ player.full_name }}</div>
                 <div class="text-xs text-gray-500">{{ player.team.name }}</div>
               </div>
             </div>
-            <span class="font-bold text-lg">{{ player.goal_count }}</span>
+            <span class="text-lg font-bold accent-green">{{ player.goal_count }}</span>
           </div>
           {% endfor %}
         </div>
       </section>
       {% endif %}
 
-      <section class="overflow-hidden rounded-[28px] bg-gray-900 p-6 text-white shadow-xl shadow-green-950/15">
-        <p class="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-green-200">Participation</p>
-        <h3 class="mb-2 text-2xl font-black">Inscrivez votre équipe</h3>
-        <p class="mb-5 text-sm leading-6 text-gray-300">Participez au tournoi ADEIB U26 et représentez votre quartier avec une inscription rapide.</p>
-        <a href="{% url 'register_team' %}" class="block w-full rounded-full bg-white py-3 text-center font-semibold text-gray-900 transition hover:bg-gray-100">
-          S'inscrire
-        </a>
+      <section class="bg-pitch-dark overflow-hidden rounded-[24px] p-6 has-shadow">
+        <p class="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-white/70">Participation</p>
+        <h3 class="mb-2 text-2xl font-black text-white">Inscrivez votre équipe</h3>
+        <p class="mb-5 text-sm leading-6 text-white/80">Représentez votre quartier au tournoi ADEIB U26 avec une inscription rapide.</p>
+        <a href="{% url 'register_team' %}" class="block w-full rounded-full bg-white py-3 text-center font-semibold text-gray-900 transition hover:bg-gray-100">S'inscrire</a>
       </section>
-
-      {% if tournament %}
-      <section class="soft-card p-5">
-        <h3 class="section-title mb-3 text-[1.15rem]">Le tournoi</h3>
-        <div class="space-y-2 text-sm">
-          {% if tournament.start_date %}
-          <div class="flex items-center gap-2 text-gray-600">
-            <i class="far fa-calendar-alt w-5"></i>
-            <span>{{ tournament.start_date|date:"d F Y" }} - {{ tournament.end_date|date:"d F Y" }}</span>
-          </div>
-          {% endif %}
-          {% if tournament.location %}
-          <div class="flex items-center gap-2 text-gray-600">
-            <i class="fas fa-map-marker-alt w-5"></i>
-            <span>{{ tournament.location }}</span>
-          </div>
-          {% endif %}
-        </div>
-      </section>
-      {% endif %}
     </div>
   </div>
 </div>

@@ -2,7 +2,7 @@
 {% block title %}{{ match }} · ADEIB U26{% endblock %}
 {% block content %}
 <div class="page-shell-wide pt-6">
-  <div class="hero-bg rounded-[34px] px-6 py-10 text-white shadow-2xl shadow-green-950/15">
+  <div class="football-hero rounded-[34px] px-6 py-10 text-white has-shadow">
   <div class="mx-auto max-w-5xl text-center">
     {% if match.group %}<span class="text-xs text-white/60 font-bold uppercase tracking-widest">Groupe {{ match.group.name }} · J{{ match.matchday }}</span>{% endif %}
     {% if match.match_date %}<p class="text-white/50 text-xs mt-1"><i class="fas fa-calendar mr-1"></i>{{ match.match_date|date:"d/m/Y · H:i" }}</p>{% endif %}
@@ -45,6 +45,33 @@
   </div>
   </div>
 </div>
+
+{% if match.status == 'LIVE' %}
+<div class="page-shell-wide px-1 pt-6">
+  <div class="flex items-center gap-2 mb-3">
+    <span class="live-pill"><span class="live-dot"></span>EN DIRECT</span>
+    <h2 class="section-title text-lg">Diffusion du match</h2>
+  </div>
+  <div class="stream-frame">
+    {% if match.stream_url %}
+      {% if match.stream_platform == 'OTHER' and '.m3u8' in match.stream_url %}
+      <video id="hlsPlayer" controls autoplay playsinline></video>
+      {% else %}
+      <iframe src="{{ match.get_embed_url }}" title="Diffusion en direct"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowfullscreen></iframe>
+      {% endif %}
+    {% else %}
+      <div class="stream-empty">
+        <div>
+          <div class="text-3xl mb-2">📡</div>
+          <p class="text-sm">La diffusion en direct n'est pas encore disponible pour ce match.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 
 <div class="page-shell-wide px-1 py-6">
   <div class="grid grid-cols-1 md:grid-cols-5 gap-5">
@@ -113,6 +140,23 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+{% if match.status == 'LIVE' and match.stream_url and '.m3u8' in match.stream_url and match.stream_platform == 'OTHER' %}
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+  (function () {
+    const url = "{{ match.stream_url|escapejs }}";
+    const video = document.getElementById('hlsPlayer');
+    if (!video) return;
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+    } else if (window.Hls && Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    }
+  })();
+</script>
+{% endif %}
 {% if match.status == 'LIVE' %}
 <script>
   const _matchId    = {{ match.pk }};

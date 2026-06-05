@@ -7,16 +7,14 @@ from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from .models import Tournament, Group, Team, Player, Match, Goal, Standing, KnockoutMatch
 from .forms import (TeamForm, PlayerForm, MatchForm, GoalForm,
-                    ScoreUpdateForm, KnockoutMatchForm, TournamentForm, TeamRegistrationForm, TicketConfigForm)
-from .models import Tournament, Group, Team, Player, Match, Goal, Standing, KnockoutMatch, TeamRegistration, TicketConfig, Ticket
+                    ScoreUpdateForm, KnockoutMatchForm, TournamentForm, TeamRegistrationForm,
+                    TicketConfigForm, MatchLiveForm)
+from .models import (Tournament, Group, Team, Player, Match, Goal, Standing,
+                     KnockoutMatch, TeamRegistration, TicketConfig, Ticket, PlayerVote)
 from .pdf_generator import generate_tickets_pdf, generate_ticket_preview
-from .ticket_designer import (
-    generate_cool_ticket_pdf,
-    generate_bulk_cool_tickets,
-    generate_ticket_from_model,
-    generate_unique_ticket_number
-)
+from django.db import IntegrityError
 import json
+import uuid
 from datetime import timedelta
 
 
@@ -106,6 +104,27 @@ def home(request):
         else Player.objects.none()
     )
 
+    # ── Affiches "Félicitations" ──
+    champion = None
+    if tournament:
+        final = (
+            KnockoutMatch.objects.filter(tournament=tournament, round='FINAL', status='FINISHED')
+            .select_related('winner')
+            .first()
+        )
+        if final and final.winner:
+            champion = final.winner
+
+    top_scorer = top_scorers[0] if top_scorers else None
+
+    motm_match = (
+        matches.filter(status='FINISHED', man_of_the_match__isnull=False)
+        .select_related('man_of_the_match', 'man_of_the_match__team', 'home_team', 'away_team')
+        .order_by('-match_date')
+        .first()
+        if tournament else None
+    )
+
     context = {
         'tournament': tournament,
         'hero_match': live_matches.first() if tournament else None,
@@ -113,6 +132,9 @@ def home(request):
         'live_matches': live_matches,
         'recent_results': recent_results,
         'top_scorers': top_scorers,
+        'champion': champion,
+        'top_scorer': top_scorer,
+        'motm_match': motm_match,
         'stats': {
             'teams': tournament.teams.count() if tournament else 0,
             'matches': matches.count() if tournament else 0,
@@ -125,11 +147,24 @@ def home(request):
 
 def teams_list(request):
     tournament = get_active_tournament()
-    groups = Group.objects.filter(tournament=tournament).prefetch_related('teams') if tournament else []
-    teams_no_group = Team.objects.filter(tournament=tournament, group__isnull=True) if tournament else []
+    groups_data = []
+    teams_no_group = []
+    if tournament:
+        for group in Group.objects.filter(tournament=tournament).order_by('name'):
+            teams = (
+                Team.objects.filter(group=group)
+                .annotate(nb_players=Count('players'))
+                .order_by('-nb_players', 'name')
+            )
+            groups_data.append({'group': group, 'teams': teams})
+        teams_no_group = (
+            Team.objects.filter(tournament=tournament, group__isnull=True)
+            .annotate(nb_players=Count('players'))
+            .order_by('-nb_players', 'name')
+        )
     return render(request, 'tournament/teams.html', {
         'tournament': tournament,
-        'groups': groups,
+        'groups_data': groups_data,
         'teams_no_group': teams_no_group,
     })
 
@@ -196,8 +231,9 @@ def standings_view(request):
     groups_data = []
     if tournament:
         for group in Group.objects.filter(tournament=tournament).order_by('name'):
-            standings = Standing.objects.filter(group=group).select_related('team').order_by(
-                '-points', '-goals_for'
+            standings = sorted(
+                Standing.objects.filter(group=group).select_related('team'),
+                key=lambda s: (-s.points, -s.goal_difference, -s.goals_for),
             )
             groups_data.append({'group': group, 'standings': standings})
     return render(request, 'tournament/standings.html', {
@@ -264,6 +300,36 @@ def bracket_view(request):
     })
 
 
+def live_view(request):
+    """Tous les matchs actuellement en direct, avec leur diffusion."""
+    tournament = get_active_tournament()
+    _sync_match_statuses(tournament)
+    live_matches = (
+        Match.objects.filter(tournament=tournament, status='LIVE')
+        .select_related('home_team', 'away_team', 'group')
+        .order_by('match_date')
+        if tournament else Match.objects.none()
+    )
+    live_knockouts = (
+        KnockoutMatch.objects.filter(tournament=tournament, status='LIVE')
+        .select_related('home_team', 'away_team')
+        .order_by('round', 'match_number')
+        if tournament else KnockoutMatch.objects.none()
+    )
+    upcoming = (
+        Match.objects.filter(tournament=tournament, status='SCHEDULED')
+        .select_related('home_team', 'away_team')
+        .order_by('match_date')[:6]
+        if tournament else Match.objects.none()
+    )
+    return render(request, 'tournament/live.html', {
+        'tournament': tournament,
+        'live_matches': live_matches,
+        'live_knockouts': live_knockouts,
+        'upcoming': upcoming,
+    })
+
+
 def register_team(request):
     tournament = get_active_tournament()
     if request.method == 'POST':
@@ -283,6 +349,67 @@ def register_team_success(request):
     return render(request, 'tournament/register_team_success.html')
 
 
+# ─── Vote meilleur joueur (poll gratuit, 1/appareil/jour) ─────
+
+def voting_page(request):
+    tournament = get_active_tournament()
+    players = (
+        Player.objects.filter(team__tournament=tournament)
+        .select_related('team')
+        .annotate(vote_count=Count('votes', filter=Q(votes__tournament=tournament)))
+        .order_by('-vote_count', 'last_name', 'first_name')
+        if tournament else Player.objects.none()
+    )
+    total = sum(p.vote_count for p in players)
+    for p in players:
+        p.vote_pct = round(p.vote_count / total * 100, 1) if total else 0
+
+    device_id = request.COOKIES.get('vote_device')
+    today = timezone.localdate()
+    voted_today = False
+    voted_player_id = None
+    if device_id and tournament:
+        v = PlayerVote.objects.filter(
+            tournament=tournament, device_id=device_id, vote_date=today
+        ).select_related('player').first()
+        if v:
+            voted_today = True
+            voted_player_id = v.player_id
+
+    return render(request, 'tournament/vote.html', {
+        'tournament': tournament,
+        'players': players,
+        'total_votes': total,
+        'voted_today': voted_today,
+        'voted_player_id': voted_player_id,
+    })
+
+
+def cast_vote(request, player_pk):
+    tournament = get_active_tournament()
+    if request.method != 'POST' or not tournament:
+        return redirect('vote')
+
+    player = get_object_or_404(Player, pk=player_pk, team__tournament=tournament)
+    device_id = request.COOKIES.get('vote_device') or uuid.uuid4().hex
+    today = timezone.localdate()
+
+    if PlayerVote.objects.filter(tournament=tournament, device_id=device_id, vote_date=today).exists():
+        messages.error(request, "Vous avez déjà voté aujourd'hui. Revenez demain pour soutenir votre joueur !")
+    else:
+        try:
+            PlayerVote.objects.create(
+                tournament=tournament, player=player, device_id=device_id, vote_date=today
+            )
+            messages.success(request, f'Merci ! Votre vote pour {player.display_name} est enregistré.')
+        except IntegrityError:
+            messages.error(request, "Vous avez déjà voté aujourd'hui.")
+
+    resp = redirect('vote')
+    resp.set_cookie('vote_device', device_id, max_age=60 * 60 * 24 * 365, samesite='Lax')
+    return resp
+
+
 # ─── API endpoints (AJAX) ────────────────────────────────────
 
 def live_scores_api(request):
@@ -299,6 +426,7 @@ def live_scores_api(request):
             'home_score': m.home_score,
             'away_score': m.away_score,
             'status': m.status,
+            'has_stream': bool(m.stream_url),
             'detail_url': f'/matches/{m.id}/',
         })
     return JsonResponse({'matches': data})
@@ -502,6 +630,26 @@ def admin_update_score(request, pk):
 
 @login_required
 @user_passes_test(is_admin)
+def admin_set_live(request, pk):
+    """Passer un match en LIVE et coller le lien de diffusion."""
+    match = get_object_or_404(Match, pk=pk)
+    if request.method == 'POST':
+        form = MatchLiveForm(request.POST, instance=match)
+        if form.is_valid():
+            m = form.save(commit=False)
+            if m.status != 'LIVE':
+                m.status = 'LIVE'
+                m.live_started_at = timezone.now()
+            m.save()
+            messages.success(request, f'{match} est maintenant EN DIRECT.')
+            return redirect('admin_matches')
+    else:
+        form = MatchLiveForm(instance=match)
+    return render(request, 'admin_panel/live_form.html', {'form': form, 'match': match})
+
+
+@login_required
+@user_passes_test(is_admin)
 def admin_add_goal(request, match_pk):
     match = get_object_or_404(Match, pk=match_pk)
     if match.status != 'LIVE':
@@ -536,6 +684,73 @@ def admin_add_goal(request, match_pk):
 
 @login_required
 @user_passes_test(is_admin)
+def admin_distribute_groups(request):
+    """Répartit automatiquement les équipes en poules de 4.
+
+    8 équipes -> 2 poules, 12 -> 3, 16 -> 4 ... Les équipes sont
+    classées par nombre de joueurs puis réparties en serpentin pour
+    équilibrer les poules.
+    """
+    import math
+    tournament = get_active_tournament()
+    if not tournament:
+        messages.error(request, 'Aucun tournoi actif.')
+        return redirect('admin_dashboard')
+
+    teams = list(
+        Team.objects.filter(tournament=tournament)
+        .annotate(nb_players=Count('players'))
+        .order_by('-nb_players', 'name')
+    )
+    n = len(teams)
+    if n < 4:
+        messages.error(request, f'Il faut au moins 4 équipes (actuellement {n}).')
+        return redirect('admin_teams')
+
+    letters = ['A', 'B', 'C', 'D', 'E', 'F']
+    num_groups = math.ceil(n / 4)
+    if num_groups > len(letters):
+        messages.error(request, "Trop d'équipes : maximum 24 (6 poules de 4).")
+        return redirect('admin_teams')
+
+    groups = []
+    for i in range(num_groups):
+        g, _ = Group.objects.get_or_create(tournament=tournament, name=letters[i])
+        g.bucket = []
+        groups.append(g)
+
+    # Répartition serpentin (équilibrée)
+    forward = True
+    i = 0
+    while i < n:
+        row = groups if forward else list(reversed(groups))
+        for g in row:
+            if i < n:
+                g.bucket.append(teams[i])
+                i += 1
+        forward = not forward
+
+    for g in groups:
+        for t in g.bucket:
+            if t.group_id != g.id:
+                t.group = g
+                t.save(update_fields=['group'])
+        bucket_ids = [t.id for t in g.bucket]
+        Standing.objects.filter(group=g).exclude(team_id__in=bucket_ids).delete()
+        for t in g.bucket:
+            Standing.objects.get_or_create(group=g, team=t)
+
+    # Nettoyage des poules superflues (sans équipe ni match)
+    for g in Group.objects.filter(tournament=tournament).exclude(name__in=letters[:num_groups]):
+        if not g.teams.exists() and not g.matches.exists():
+            g.delete()
+
+    messages.success(request, f'{n} équipes réparties dans {num_groups} poule(s) de 4.')
+    return redirect('admin_teams')
+
+
+@login_required
+@user_passes_test(is_admin)
 def admin_generate_matches(request):
     tournament = get_active_tournament()
     if not tournament:
@@ -563,7 +778,7 @@ def admin_generate_matches(request):
                         home_team=teams[i],
                         away_team=teams[j],
                         matchday=matchday,
-                        venue='Terrain ADEIB, Illara'
+                        venue='Stade Cup Legends'
                     )
                     created += 1
                     matchday += 1
@@ -770,8 +985,8 @@ def admin_ticket_config(request, match_pk):
     config, created = TicketConfig.objects.get_or_create(
         match=match,
         defaults={
-            'price': 500,
-            'ticket_size': 'small',
+            'price': 200,
+            'currency': 'NGN',
             'quantity': 100,
         }
     )
@@ -832,16 +1047,17 @@ def admin_generate_tickets(request, config_pk):
                 'match_date': match.match_date.strftime('%d/%m/%Y') if match.match_date else 'DATE',
                 'gate_opens': str(config.gate_opens)[:5] if config.gate_opens else '13:00',
                 'gate_closes': str(config.gate_closes)[:5] if config.gate_closes else '19:00',
-                'venue': match.venue or 'Terrain ADEIB, Illara',
+                'venue': match.venue or 'Stade Cup Legends',
                 'price': config.price,
                 'currency': config.currency,
+                'match_id': match.id,
             })
 
         # Generer le PDF
         pdf_buffer = generate_tickets_pdf(match, config, tickets_data)
 
         # Nom du fichier
-        filename = f"tickets_{match.home_team.name}_vs_{match.away_team.name}_{config.ticket_size}.pdf".replace(' ', '_')
+        filename = f"tickets_{match.home_team.name}_vs_{match.away_team.name}.pdf".replace(' ', '_')
 
         response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -878,14 +1094,15 @@ def admin_download_tickets(request, config_pk):
             'match_date': match.match_date.strftime('%d/%m/%Y') if match.match_date else 'DATE',
             'gate_opens': str(config.gate_opens)[:5] if config.gate_opens else '13:00',
             'gate_closes': str(config.gate_closes)[:5] if config.gate_closes else '19:00',
-            'venue': match.venue or 'Terrain ADEIB, Illara',
+            'venue': match.venue or 'Stade Cup Legends',
             'price': config.price,
             'currency': config.currency,
+            'match_id': match.id,
         })
 
     pdf_buffer = generate_tickets_pdf(match, config, tickets_data)
 
-    filename = f"tickets_{match.home_team.name}_vs_{match.away_team.name}_{config.ticket_size}.pdf".replace(' ', '_')
+    filename = f"tickets_{match.home_team.name}_vs_{match.away_team.name}.pdf".replace(' ', '_')
 
     response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -923,91 +1140,4 @@ def admin_delete_tickets(request, config_pk):
         'config': config,
         'match': match,
         'ticket_count': config.tickets.count(),
-    })
-
-
-# ─── NOUVEAUX VUES POUR TICKETS COOL ET UNIQUES ───────────────────────────
-
-@login_required
-@user_passes_test(is_admin)
-def admin_preview_cool_ticket(request, match_pk):
-    """Aperçu d'un ticket au design cool et unique"""
-    match = get_object_or_404(Match, pk=match_pk)
-
-    # Créer une config temporaire si elle n'existe pas
-    config, _ = TicketConfig.objects.get_or_create(
-        match=match,
-        defaults={
-            'price': 500,
-            'ticket_size': 'cool',
-            'quantity': 100,
-        }
-    )
-
-    # Générer le PDF cool
-    pdf_buffer = generate_cool_ticket_pdf(match, config, is_preview=True)
-
-    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="ticket_cool_preview.pdf"'
-    return response
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_generate_cool_tickets(request, match_pk):
-    """Générer des tickets au design cool et unique"""
-    match = get_object_or_404(Match, pk=match_pk)
-
-    config, _ = TicketConfig.objects.get_or_create(
-        match=match,
-        defaults={
-            'price': 500,
-            'ticket_size': 'cool',
-            'quantity': 100,
-        }
-    )
-
-    if request.method == 'POST':
-        quantity = int(request.POST.get('quantity', 8))
-
-        # Générer les tickets en PDF bulk
-        pdf_buffer = generate_bulk_cool_tickets(match, config, quantity)
-
-        filename = f"tickets_cool_{match.home_team.name}_vs_{match.away_team.name}.pdf".replace(' ', '_')
-
-        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-        messages.success(request, f'{quantity} tickets cool générés avec succès.')
-        return response
-
-    return render(request, 'admin_panel/generate_cool_tickets.html', {
-        'match': match,
-        'config': config,
-    })
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_download_individual_cool_ticket(request, ticket_pk):
-    """Télécharger un ticket individuel au format cool"""
-    ticket = get_object_or_404(Ticket, pk=ticket_pk)
-
-    pdf_buffer = generate_ticket_from_model(ticket)
-
-    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="ticket_{ticket.ticket_number}.pdf"'
-    return response
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_ticket_designer(request):
-    """Page principale du designer de tickets"""
-    tournament = get_active_tournament()
-    matches = Match.objects.filter(tournament=tournament).select_related('home_team', 'away_team').prefetch_related('ticket_config')
-
-    return render(request, 'admin_panel/ticket_designer.html', {
-        'matches': matches,
-        'tournament': tournament,
     })

@@ -4,28 +4,18 @@
 {% block title %}Phases finales — ADEIB U26{% endblock %}
 
 {% block content %}
+{% include "_page_hero.html" with title="Phases finales" eyebrow="Élimination directe" %}
 <div class="max-w-6xl mx-auto px-4 py-8">
 
-  <!-- Header -->
-  <div class="flex items-center gap-3 mb-8">
-    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg bg-black">
-      <i class="fas fa-sitemap"></i>
-    </div>
-    <div>
-      <h1 class="text-2xl font-black text-gray-900">Phases finales</h1>
-      <p class="text-sm text-gray-500">Tableau des éliminations directes</p>
-    </div>
-    {% if user.is_staff %}
-    <div class="ml-auto flex gap-2">
-      <a href="{% url 'admin_generate_knockout' %}"
-         class="text-xs font-bold px-4 py-2 rounded-lg text-white transition-colors"
-         class="text-xs font-bold px-4 py-2 rounded-lg text-white transition-colors bg-black"
-         onclick="return confirm('Régénérer les phases finales ? Les données existantes seront effacées.')">
-        <i class="fas fa-sync mr-1"></i>Générer
-      </a>
-    </div>
-    {% endif %}
+  {% if user.is_staff %}
+  <div class="mb-6 flex justify-end">
+    <a href="{% url 'admin_generate_knockout' %}"
+       class="text-xs font-bold px-4 py-2 rounded-lg text-white transition-colors bg-pitch"
+       onclick="return confirm('Régénérer les phases finales ? Les données existantes seront effacées.')">
+      <i class="fas fa-sync mr-1"></i>Régénérer le tableau
+    </a>
   </div>
+  {% endif %}
 
   {% if not qf_matches and not final_match %}
   <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center">

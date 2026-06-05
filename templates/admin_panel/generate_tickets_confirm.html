@@ -185,38 +185,13 @@
 
         <div class="info-card animate-slideIn" style="animation-delay: 0.15s;">
           <div class="text-sm text-gray-500 mb-2">Format</div>
-          <div class="text-xl font-bold text-gray-900">
-            {% if config.ticket_size == 'small' %}
-              Petit
-            {% elif config.ticket_size == 'medium' %}
-              Moyen
-            {% elif config.ticket_size == 'large' %}
-              Grand
-            {% else %}
-              Premium
-            {% endif %}
-          </div>
-          <div class="text-xs text-gray-400 mt-1">
-            {% if config.ticket_size == 'small' %}10 tickets / page
-            {% elif config.ticket_size == 'medium' %}6 tickets / page
-            {% elif config.ticket_size == 'large' %}4 tickets / page
-            {% else %}2 tickets / A4 Paysage{% endif %}
-          </div>
+          <div class="text-xl font-bold text-gray-900">A4 · 2 colonnes</div>
+          <div class="text-xs text-gray-400 mt-1">10 tickets / page</div>
         </div>
 
         <div class="info-card animate-slideIn" style="animation-delay: 0.2s;">
           <div class="text-sm text-gray-500 mb-2">Pages PDF</div>
-          <div class="text-3xl font-black text-gray-900">
-            {% if config.ticket_size == 'small' %}
-              {% widthratio config.quantity 10 1 %}
-            {% elif config.ticket_size == 'medium' %}
-              {% widthratio config.quantity 6 1 %}
-            {% elif config.ticket_size == 'large' %}
-              {% widthratio config.quantity 4 1 %}
-            {% else %}
-              {% widthratio config.quantity 2 1 %}
-            {% endif %}
-          </div>
+          <div class="text-3xl font-black text-gray-900">{% widthratio config.quantity 10 1 %}</div>
           <div class="text-xs text-gray-400 mt-1">pages A4</div>
         </div>
 

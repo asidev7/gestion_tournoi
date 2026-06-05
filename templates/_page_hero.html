@@ -1,0 +1,11 @@
+{% load static %}
+<section class="football-hero full-bleed">
+  <div class="page-shell-wide py-10 text-center text-white md:py-14">
+    {% if eyebrow %}
+    <span class="site-chip mb-4 text-white"><i class="fas fa-futbol text-[11px]"></i> {{ eyebrow }}</span>
+    {% endif %}
+    <h1 class="font-heading text-3xl font-black leading-tight md:text-5xl">{{ title }}</h1>
+    <div class="mx-auto my-3 h-1 w-16 rounded-full bg-white/70"></div>
+    <p class="text-xs uppercase tracking-[0.28em] text-white/75">{{ subtitle|default:"ADEIB U26 · Illara" }}</p>
+  </div>
+</section>

@@ -1,0 +1,124 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Live · Cup Legends{% endblock %}
+{% block content %}
+
+<section class="football-hero full-bleed">
+  <div class="page-shell-wide py-10 text-white md:py-14">
+    <div class="flex items-center gap-3">
+      <span class="live-pill"><span class="live-dot"></span>EN DIRECT</span>
+      <span class="text-xs uppercase tracking-[0.28em] text-white/60">ADEIB U26 · Illara</span>
+    </div>
+    <h1 class="font-heading text-3xl font-black md:text-5xl mt-3">En direct maintenant</h1>
+    <p class="text-white/80 mt-2 text-sm">
+      {% with n=live_matches|length %}{{ n }} match{{ n|pluralize:",s" }} diffusé{{ n|pluralize }} en ce moment.{% endwith %}
+    </p>
+  </div>
+</section>
+
+<div class="page-shell-wide px-1 py-8">
+
+  {% if live_matches or live_knockouts %}
+  <div class="grid gap-8 lg:grid-cols-2">
+
+    {% for match in live_matches %}
+    <section class="site-card overflow-hidden">
+      <div class="stream-frame" style="border:0;border-radius:0">
+        {% if match.stream_url %}
+        <iframe src="{{ match.get_embed_url }}" title="{{ match }}"
+                allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen></iframe>
+        {% else %}
+        <div class="stream-empty"><div><div class="text-3xl mb-2">📡</div><p class="text-sm">Diffusion bientôt disponible</p></div></div>
+        {% endif %}
+      </div>
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            {{ match.get_phase_display }}{% if match.group %} · Groupe {{ match.group.name }}{% endif %}
+          </span>
+          <span class="live-pill"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="team-logo h-11 w-11 shrink-0">
+              {% if match.home_team.logo %}<img src="{{ match.home_team.logo.url }}" alt="">
+              {% else %}<span class="team-logo-fallback">{{ match.home_team.name|first|upper }}</span>{% endif %}
+            </div>
+            <span class="font-semibold truncate">{{ match.home_team.name }}</span>
+          </div>
+          <div class="score text-3xl px-3">{{ match.home_score }} – {{ match.away_score }}</div>
+          <div class="flex items-center justify-end gap-3 min-w-0 text-right">
+            <span class="font-semibold truncate">{{ match.away_team.name }}</span>
+            <div class="team-logo h-11 w-11 shrink-0">
+              {% if match.away_team.logo %}<img src="{{ match.away_team.logo.url }}" alt="">
+              {% else %}<span class="team-logo-fallback">{{ match.away_team.name|first|upper }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        <a href="{% url 'match_detail' match.pk %}" class="cl-btn-solid w-full mt-4">Suivre le match</a>
+      </div>
+    </section>
+    {% endfor %}
+
+    {% for match in live_knockouts %}
+    <section class="site-card overflow-hidden">
+      <div class="stream-frame" style="border:0;border-radius:0">
+        {% if match.stream_url %}
+        <iframe src="{{ match.get_embed_url }}" title="{{ match }}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        {% else %}
+        <div class="stream-empty"><div><div class="text-3xl mb-2">📡</div><p class="text-sm">Diffusion bientôt disponible</p></div></div>
+        {% endif %}
+      </div>
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ match.get_round_display }}</span>
+          <span class="live-pill"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <span class="font-semibold truncate">{{ match.home_team.name|default:"À définir" }}</span>
+          <div class="score text-3xl px-3">{{ match.home_score }} – {{ match.away_score }}</div>
+          <span class="font-semibold truncate text-right">{{ match.away_team.name|default:"À définir" }}</span>
+        </div>
+      </div>
+    </section>
+    {% endfor %}
+
+  </div>
+  {% else %}
+  <div class="site-card text-center py-16 px-6">
+    <div class="text-5xl mb-3">📺</div>
+    <h2 class="section-title text-xl mb-1">Aucun match en direct</h2>
+    <p class="text-gray-500 text-sm">Revenez pendant un match pour suivre la diffusion en direct.</p>
+  </div>
+  {% endif %}
+
+  {% if upcoming %}
+  <section class="mt-10">
+    <h2 class="section-title text-xl mb-4">Prochains matchs</h2>
+    <div class="site-card divide-y" style="border-color:var(--color-line)">
+      {% for match in upcoming %}
+      <a href="{% url 'match_detail' match.pk %}" class="flex items-center justify-between px-5 py-4 hover:bg-gray-50" style="border-color:var(--color-line)">
+        <span class="font-semibold">{{ match.home_team.name }} <span class="text-gray-400 font-normal">vs</span> {{ match.away_team.name }}</span>
+        <span class="text-xs text-gray-500">{% if match.match_date %}{{ match.match_date|date:"d/m · H:i" }}{% else %}À confirmer{% endif %}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Rafraîchit les scores live ~ toutes les 30s
+  setInterval(async () => {
+    try {
+      const res = await fetch("{% url 'live_scores_api' %}");
+      const data = await res.json();
+      // Si le nombre de matchs en direct change, on recharge la page
+      if (data.matches.length !== {{ live_matches|length }}) location.reload();
+    } catch (e) {}
+  }, 30000);
+</script>
+{% endblock %}

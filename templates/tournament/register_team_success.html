@@ -2,21 +2,23 @@
 {% block title %}Inscription envoyée · ADEIB U26{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto px-4 py-16 text-center">
-  <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-6" style="background:#0d5c2e">
-    <i class="fas fa-check"></i>
-  </div>
-  <h1 class="text-2xl font-black text-gray-900">Inscription reçue !</h1>
-  <p class="mt-3 text-gray-500 text-sm leading-relaxed">
-    Votre demande d'inscription a bien été enregistrée. Nous allons vérifier votre preuve de paiement et vous contacter dans les plus brefs délais.
-  </p>
-  <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-    <a href="{% url 'home' %}" class="text-white font-bold text-sm px-6 py-3 rounded-lg hover:opacity-90 transition-opacity" style="background:#0d5c2e">
-      Retour à l'accueil
-    </a>
-    <a href="{% url 'register_team' %}" class="border border-gray-300 text-gray-700 font-bold text-sm px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-      Nouvelle inscription
-    </a>
+<div class="max-w-md mx-auto px-4 py-16">
+  <div class="site-card has-shadow-sm p-8 text-center">
+    <div class="bg-pitch mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full text-2xl text-white">
+      <i class="fas fa-check"></i>
+    </div>
+    <h1 class="text-2xl font-black text-gray-900">Inscription reçue !</h1>
+    <p class="mt-3 text-sm leading-relaxed text-gray-500">
+      Votre demande a bien été enregistrée. Nous allons vérifier votre preuve de paiement et vous contacter dans les plus brefs délais.
+    </p>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+      <a href="{% url 'home' %}" class="bg-pitch rounded-lg px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90">
+        Retour à l'accueil
+      </a>
+      <a href="{% url 'register_team' %}" class="rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50">
+        Nouvelle inscription
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -267,16 +267,7 @@
 
           <div class="text-center p-3 bg-gray-50 rounded-xl">
             <div class="text-xs text-gray-500 mb-1">Format</div>
-            <span class="ticket-badge
-              {% if match.ticket_config.ticket_size == 'small' %}ticket-badge-small
-              {% elif match.ticket_config.ticket_size == 'medium' %}ticket-badge-medium
-              {% elif match.ticket_config.ticket_size == 'large' %}ticket-badge-large
-              {% else %}bg-gradient-to-r from-yellow-400 to-yellow-600 text-white{% endif %}">
-              {% if match.ticket_config.ticket_size == 'small' %}10/page
-              {% elif match.ticket_config.ticket_size == 'medium' %}6/page
-              {% elif match.ticket_config.ticket_size == 'large' %}4/page
-              {% else %}Premium{% endif %}
-            </span>
+            <span class="ticket-badge ticket-badge-small">10 / page · 2 col.</span>
           </div>
 
           <div class="text-center p-3 bg-gray-50 rounded-xl">

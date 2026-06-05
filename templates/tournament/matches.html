@@ -1,14 +1,8 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Matchs · ADEIB U26{% endblock %}
 {% block content %}
-<div class="page-shell-wide pt-6">
-  <div class="hero-bg rounded-[32px] px-6 py-10 text-center text-white shadow-2xl shadow-green-950/15 md:px-10">
-    <h1 class="font-heading text-3xl font-black md:text-5xl">Calendrier des Matchs</h1>
-    <div class="mx-auto my-3 h-1 w-16 rounded-full bg-white/70"></div>
-    <p class="text-xs uppercase tracking-[0.28em] text-white/70">ADEIB U26 · Illara</p>
-  </div>
-</div>
-<div class="page-shell-wide px-1 py-6">
+{% include "_page_hero.html" with title="Calendrier des matchs" eyebrow="Programme" %}
+<div class="page-shell-wide px-1 py-8">
   <!-- FILTRES -->
   <form method="get" class="site-card mb-6 flex flex-wrap items-end gap-3 p-4">
     <div>

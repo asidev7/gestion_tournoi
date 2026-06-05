@@ -13,9 +13,13 @@ urlpatterns = [
     path('standings/', views.standings_view, name='standings'),
     path('statistics/', views.statistics_view, name='statistics'),
     path('bracket/', views.bracket_view, name='bracket'),
+    path('live/', views.live_view, name='live'),
 
     path('inscription/', views.register_team, name='register_team'),
     path('inscription/merci/', views.register_team_success, name='register_team_success'),
+
+    path('vote/', views.voting_page, name='vote'),
+    path('vote/<int:player_pk>/', views.cast_vote, name='cast_vote'),
 
     # API (AJAX)
     path('api/live-scores/', views.live_scores_api, name='live_scores_api'),
@@ -30,11 +34,13 @@ urlpatterns = [
     path('admin-panel/teams/<int:pk>/edit/', views.admin_edit_team, name='admin_edit_team'),
     path('admin-panel/teams/<int:pk>/delete/', views.admin_delete_team, name='admin_delete_team'),
     path('admin-panel/teams/<int:team_pk>/players/add/', views.admin_add_player, name='admin_add_player'),
+    path('admin-panel/teams/distribute/', views.admin_distribute_groups, name='admin_distribute_groups'),
     path('admin-panel/players/<int:pk>/delete/', views.admin_delete_player, name='admin_delete_player'),
 
     path('admin-panel/matches/', views.admin_matches, name='admin_matches'),
     path('admin-panel/matches/add/', views.admin_add_match, name='admin_add_match'),
     path('admin-panel/matches/<int:pk>/edit/', views.admin_edit_match, name='admin_edit_match'),
+    path('admin-panel/matches/<int:pk>/live/', views.admin_set_live, name='admin_set_live'),
     path('admin-panel/matches/<int:pk>/score/', views.admin_update_score, name='admin_update_score'),
     path('admin-panel/matches/<int:match_pk>/goals/add/', views.admin_add_goal, name='admin_add_goal'),
     path('admin-panel/matches/generate/', views.admin_generate_matches, name='admin_generate_matches'),
@@ -49,11 +55,5 @@ urlpatterns = [
     path('admin-panel/tickets/<int:config_pk>/download/', views.admin_download_tickets, name='admin_download_tickets'),
     path('admin-panel/tickets/<int:config_pk>/preview/', views.admin_preview_ticket, name='admin_preview_ticket'),
     path('admin-panel/tickets/<int:config_pk>/delete/', views.admin_delete_tickets, name='admin_delete_tickets'),
-
-    # Ticket Designer - Cool & Unique
-    path('admin-panel/ticket-designer/', views.admin_ticket_designer, name='admin_ticket_designer'),
-    path('admin-panel/matches/<int:match_pk>/tickets/cool/preview/', views.admin_preview_cool_ticket, name='admin_preview_cool_ticket'),
-    path('admin-panel/matches/<int:match_pk>/tickets/cool/generate/', views.admin_generate_cool_tickets, name='admin_generate_cool_tickets'),
-    path('admin-panel/tickets/cool/<int:ticket_pk>/download/', views.admin_download_individual_cool_ticket, name='admin_download_individual_cool_ticket'),
 ]
 

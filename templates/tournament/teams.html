@@ -1,61 +1,72 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Équipes · ADEIB U26{% endblock %}
 {% block content %}
-<div class="page-shell-wide pt-6">
-  <div class="hero-bg rounded-[32px] px-6 py-10 text-center text-white shadow-2xl shadow-green-950/15 md:px-10">
+<section class="football-hero full-bleed">
+  <div class="page-shell-wide py-10 text-center text-white md:py-14">
     <h1 class="font-heading text-3xl font-black md:text-5xl">Équipes du tournoi</h1>
     <div class="mx-auto my-3 h-1 w-16 rounded-full bg-white/70"></div>
-    <p class="text-xs uppercase tracking-[0.28em] text-white/70">ADEIB U26 · Illara</p>
+    <p class="text-xs uppercase tracking-[0.28em] text-white/75">ADEIB U26 · Illara</p>
+    {% if user.is_staff %}
+    <a href="{% url 'admin_distribute_groups' %}"
+       class="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+       onclick="return confirm('Répartir automatiquement les équipes en poules de 4 (classées par nombre de joueurs) ?');">
+      <i class="fas fa-shuffle"></i> Répartir en poules de 4
+    </a>
+    {% endif %}
   </div>
-</div>
+</section>
+
 <div class="page-shell-wide px-1 py-8">
-  {% if groups %}
-    {% for group in groups %}
-    <div class="mb-10">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-black shrink-0 bg-black">{{ group.name }}</div>
-        <h2 class="font-bold text-gray-700">Groupe {{ group.name }}</h2>
-        <span class="text-xs text-gray-400">{{ group.teams.count }} équipe{{ group.teams.count|pluralize }}</span>
-        <div class="flex-1 h-px bg-gray-200"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-        {% for team in group.teams.all %}
-        <a href="{% url 'team_detail' team.pk %}" class="site-card block p-5 text-center no-underline transition-all hover:-translate-y-1 hover:shadow-xl">
-          <div class="team-logo mx-auto mb-4 h-20 w-20">
-            {% if team.logo %}<img src="{{ team.logo.url }}" alt="{{ team.name }}">
-            {% else %}<span class="team-logo-fallback text-2xl">{{ team.name|first|upper }}</span>{% endif %}
-          </div>
-          <div class="font-bold text-sm text-gray-800 leading-tight">{{ team.name }}</div>
-          <span class="mt-2 inline-block rounded-full bg-[#0d5c2e] px-2.5 py-1 text-xs font-bold text-white">Gr. {{ group.name }}</span>
-          <div class="text-xs text-gray-400 mt-1">{{ team.player_count }} joueur{{ team.player_count|pluralize }}</div>
-        </a>
-        {% empty %}<p class="text-gray-400 text-sm col-span-full">Aucune équipe dans ce groupe</p>{% endfor %}
-      </div>
+  {% for gd in groups_data %}
+  <div class="mb-10">
+    <div class="mb-4 flex items-center gap-3">
+      <div class="bg-pitch flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black text-white">{{ gd.group.name }}</div>
+      <h2 class="font-bold text-gray-700">Groupe {{ gd.group.name }}</h2>
+      <span class="text-xs text-gray-400">{{ gd.teams|length }} équipe{{ gd.teams|length|pluralize }}</span>
+      <div class="h-px flex-1 bg-gray-200"></div>
     </div>
-    {% endfor %}
-  {% endif %}
-  {% if teams_no_group %}
-  <div class="mb-8">
-    <div class="flex items-center gap-3 mb-4">
-      <div class="w-8 h-8 rounded-lg bg-gray-300 flex items-center justify-center text-white text-xs font-bold shrink-0">?</div>
-      <h2 class="font-bold text-gray-600">Sans groupe</h2>
-      <div class="flex-1 h-px bg-gray-200"></div>
-    </div>
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-      {% for team in teams_no_group %}
-      <a href="{% url 'team_detail' team.pk %}" class="site-card block p-5 text-center no-underline transition-all hover:-translate-y-1 hover:shadow-xl">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      {% for team in gd.teams %}
+      <a href="{% url 'team_detail' team.pk %}" class="match-tile lift block p-5 text-center no-underline">
         <div class="team-logo mx-auto mb-4 h-20 w-20">
           {% if team.logo %}<img src="{{ team.logo.url }}" alt="{{ team.name }}">{% else %}<span class="team-logo-fallback text-2xl">{{ team.name|first|upper }}</span>{% endif %}
         </div>
-        <div class="font-bold text-sm text-gray-800">{{ team.name }}</div>
-        <div class="text-xs text-gray-400 mt-1">{{ team.player_count }} joueur{{ team.player_count|pluralize }}</div>
+        <div class="text-sm font-bold leading-tight text-gray-800">{{ team.name }}</div>
+        <span class="bg-pitch mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-bold text-white">Gr. {{ gd.group.name }}</span>
+        <div class="mt-1 flex items-center justify-center gap-1 text-xs text-gray-400">
+          <i class="fas fa-users text-[10px]"></i>{{ team.nb_players }} joueur{{ team.nb_players|pluralize }}
+        </div>
+      </a>
+      {% empty %}<p class="col-span-full text-sm text-gray-400">Aucune équipe dans ce groupe</p>{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if teams_no_group %}
+  <div class="mb-8">
+    <div class="mb-4 flex items-center gap-3">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-300 text-xs font-bold text-white">?</div>
+      <h2 class="font-bold text-gray-600">Sans poule</h2>
+      <div class="h-px flex-1 bg-gray-200"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      {% for team in teams_no_group %}
+      <a href="{% url 'team_detail' team.pk %}" class="match-tile lift block p-5 text-center no-underline">
+        <div class="team-logo mx-auto mb-4 h-20 w-20">
+          {% if team.logo %}<img src="{{ team.logo.url }}" alt="{{ team.name }}">{% else %}<span class="team-logo-fallback text-2xl">{{ team.name|first|upper }}</span>{% endif %}
+        </div>
+        <div class="text-sm font-bold text-gray-800">{{ team.name }}</div>
+        <div class="mt-1 flex items-center justify-center gap-1 text-xs text-gray-400">
+          <i class="fas fa-users text-[10px]"></i>{{ team.nb_players }} joueur{{ team.nb_players|pluralize }}
+        </div>
       </a>
       {% endfor %}
     </div>
   </div>
   {% endif %}
-  {% if not groups and not teams_no_group %}
-  <div class="text-center py-16 text-gray-400"><div class="text-5xl mb-3">👥</div><p>Aucune équipe inscrite.</p></div>
+
+  {% if not groups_data and not teams_no_group %}
+  <div class="py-16 text-center text-gray-400"><div class="mb-3 text-5xl">👥</div><p>Aucune équipe inscrite.</p></div>
   {% endif %}
 </div>
 {% endblock %}

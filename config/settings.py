@@ -123,11 +123,11 @@ if not DEBUG and not IS_RUNSERVER:
     CSRF_COOKIE_SECURE = True
 
 JAZZMIN_SETTINGS = {
-    "site_title": "ADEIB Admin",
-    "site_header": "ADEIB U26",
-    "site_brand": "ADEIB U26",
+    "site_title": "Cup Legends Admin",
+    "site_header": "Cup Legends",
+    "site_brand": "Cup Legends",
     "welcome_sign": "Bienvenue sur le panneau d'administration",
-    "copyright": "ADEIB",
+    "copyright": "Cup Legends",
     "search_model": "auth.User",
     "topmenu_links": [
         {"name": "Site", "url": "/", "new_window": False},

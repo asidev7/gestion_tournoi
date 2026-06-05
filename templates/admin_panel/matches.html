@@ -72,6 +72,12 @@
             </td>
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-1 flex-wrap">
+                {% if match.status != 'FINISHED' %}
+                <a href="{% url 'admin_set_live' match.pk %}" title="Passer en direct + lien de diffusion"
+                   class="text-xs px-2 py-1 rounded-md border border-black text-black hover:bg-gray-100 font-semibold transition-colors whitespace-nowrap">
+                  <i class="fas fa-broadcast-tower mr-1"></i>Live
+                </a>
+                {% endif %}
                 <a href="{% url 'admin_update_score' match.pk %}" title="Score"
                    class="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800 font-semibold transition-colors whitespace-nowrap">
                   <i class="fas fa-futbol mr-1"></i>Score

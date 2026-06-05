@@ -4,127 +4,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}ADEIB U26 · Illara{% endblock %}</title>
+  <title>{% block title %}Cup Legends{% endblock %}</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+  <script>
+    // Tailwind en mode monochrome : aucune ombre, une seule teinte.
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            body: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          boxShadow: { DEFAULT: 'none', none: 'none' },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
-<style>
-    body { font-family: 'Roboto', sans-serif; }
-    h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Poppins', sans-serif; }
 
-    .nav-link {
-      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .nav-link:hover {
-      transform: translateY(-1px);
-      color: #0d5c2e;
-      background: rgba(255, 255, 255, 0.72);
-      box-shadow: 0 10px 24px rgba(7, 54, 26, 0.08);
-    }
-    .nav-link.active {
-      color: #0d5c2e;
-      background: #ffffff;
-      box-shadow: 0 12px 28px rgba(7, 54, 26, 0.1);
-    }
+<body>
 
-    #mobileMenu {
-      transition: max-height 0.25s ease, opacity 0.25s ease;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-    }
-    #mobileMenu.show {
-      max-height: 500px;
-      opacity: 1;
-    }
-  </style>
+<!-- ── HEADER ── -->
+<header class="cl-header">
+  <div class="page-shell-wide cl-header-inner">
+    <a href="{% url 'home' %}" class="cl-logo" aria-label="Cup Legends">
+      <span class="cl-cup">Cup</span><span class="cl-legends">Legends</span>
+    </a>
 
-<body class="bg-gray-50 text-gray-800">
+    <nav class="cl-nav">
+      <a href="{% url 'home' %}"      data-nav>Accueil</a>
+      <a href="{% url 'teams' %}"     data-nav>Équipes</a>
+      <a href="{% url 'matches' %}"   data-nav>Matchs</a>
+      <a href="{% url 'standings' %}" data-nav>Classement</a>
+      <a href="{% url 'vote' %}"      data-nav>Vote</a>
+      <a href="{% url 'live' %}"      data-nav>Live</a>
+      <a href="{% url 'bracket' %}"   data-nav>Bracket</a>
+    </nav>
 
-<nav class="sticky top-0 z-50 bg-transparent">
-  <div class="page-shell px-1 py-4 md:py-5">
-    <div class="flex items-center justify-between rounded-[30px] bg-white/68 px-5 py-4 shadow-[0_18px_45px_rgba(7,54,26,0.10)] backdrop-blur-2xl md:px-6">
-
-      <a href="{% url 'home' %}" class="flex items-center gap-4 no-underline group">
-        <div class="brand-mark h-12 w-12">
-          {% if tournament and tournament.logo %}
-          <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}">
-          {% else %}
-          <span class="font-heading text-xl font-black text-white">A</span>
-          {% endif %}
-        </div>
-        <div class="flex flex-col">
-          <span class="font-heading text-lg font-black leading-none text-gray-900">ADEIB</span>
-          <span class="font-heading mt-0.5 text-[11px] font-bold uppercase tracking-[0.24em] text-[#0d5c2e]">U26 Illara</span>
-        </div>
-      </a>
-
-      <div class="hidden items-center gap-3 lg:flex">
-        <div class="flex items-center gap-1 rounded-full bg-white/60 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-          <a href="{% url 'home' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Accueil</a>
-          <a href="{% url 'teams' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Équipes</a>
-          <a href="{% url 'matches' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Matchs</a>
-          <a href="{% url 'standings' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Classement</a>
-          <a href="{% url 'bracket' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Finales</a>
-          <a href="{% url 'statistics' %}" class="nav-link font-heading rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600" data-nav>Stats</a>
-        </div>
-        {% if user.is_staff %}
-        <a href="{% url 'admin_dashboard' %}" class="rounded-full bg-[#0f172a] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-black">
-          <i class="fas fa-cog mr-2"></i>Admin
-        </a>
-        {% endif %}
-      </div>
-
-      <button id="mobileToggle" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-gray-700 shadow-md shadow-green-950/5 transition hover:bg-white lg:hidden">
-        <i class="fas fa-bars text-xl"></i>
-      </button>
+    <div class="hidden md:flex items-center gap-2">
+      {% if user.is_staff %}
+      <a href="{% url 'admin_dashboard' %}" class="cl-admin-link desktop">Admin</a>
+      {% endif %}
     </div>
 
-    <div id="mobileMenu" class="lg:hidden">
-      <div class="mt-3 rounded-[26px] bg-white/88 p-3 shadow-[0_20px_45px_rgba(7,54,26,0.12)] backdrop-blur-2xl">
-        <div class="flex flex-col gap-1">
-        <a href="{% url 'home' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">🏠</span> Accueil
-        </a>
-        <a href="{% url 'teams' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">👥</span> Équipes
-        </a>
-        <a href="{% url 'matches' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">⚽</span> Matchs
-        </a>
-        <a href="{% url 'standings' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">📊</span> Classement
-        </a>
-        <a href="{% url 'bracket' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">🏆</span> Phases finales
-        </a>
-        <a href="{% url 'statistics' %}" class="font-heading flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-gray-700 transition hover:bg-white/80" data-nav>
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3f8f5] text-sm shadow-sm">📈</span> Statistiques
-        </a>
-        {% if user.is_staff %}
-        <a href="{% url 'admin_dashboard' %}" class="font-heading mt-2 flex items-center gap-3 rounded-2xl bg-[#0f172a] px-4 py-3.5 text-base font-bold text-white shadow-lg shadow-slate-900/15">
-          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/10 text-sm">⚙️</span> Administration
-        </a>
-        {% endif %}
-        </div>
-      </div>
+    <button id="mobileToggle" class="cl-burger" aria-label="Menu">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <div id="mobileMenu" class="md:hidden">
+    <div class="page-shell-wide">
+      <a href="{% url 'home' %}"      data-nav>Accueil</a>
+      <a href="{% url 'teams' %}"     data-nav>Équipes</a>
+      <a href="{% url 'matches' %}"   data-nav>Matchs</a>
+      <a href="{% url 'standings' %}" data-nav>Classement</a>
+      <a href="{% url 'vote' %}"      data-nav>Vote</a>
+      <a href="{% url 'live' %}"      data-nav>Live</a>
+      <a href="{% url 'bracket' %}"   data-nav>Bracket</a>
+      <a href="{% url 'statistics' %}" data-nav>Statistiques</a>
+      {% if user.is_staff %}<a href="{% url 'admin_dashboard' %}" data-nav>Administration</a>{% endif %}
     </div>
   </div>
-</nav>
+</header>
 
-<!-- MESSAGES -->
+<!-- ── TICKER LIVE (active aussi le son de but sur tout le site) ── -->
+<div id="liveTicker" class="cl-ticker" style="display:none">
+  <span class="cl-ticker-label"><span class="live-dot"></span>LIVE</span>
+  <div class="cl-ticker-track"><span id="tickerText"></span></div>
+</div>
+
+<!-- ── MESSAGES ── -->
 {% if messages %}
-<div class="page-shell mt-4 space-y-2 px-1">
+<div class="page-shell-wide mt-4 space-y-2">
   {% for msg in messages %}
-  <div class="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold border
-    {% if msg.tags == 'success' %}bg-green-50 text-green-800 border-green-200
-    {% elif msg.tags == 'error' %}bg-red-50 text-red-800 border-red-200
-    {% else %}bg-gray-100 text-gray-800 border-gray-200{% endif %}">
+  <div class="px-4 py-3 rounded text-sm font-semibold border
+    {% if msg.tags == 'error' %}border-black text-black bg-white{% else %}border-gray-200 text-gray-800 bg-gray-50{% endif %}"
+    style="border-radius:var(--radius)">
     {{ msg }}
   </div>
   {% endfor %}
@@ -133,77 +98,37 @@
 
 {% block content %}{% endblock %}
 
-<footer class="mt-20 pb-8 pt-4 text-white font-heading">
-  <div class="page-shell">
-    <div class="rounded-[30px] bg-gray-900 px-6 py-12 shadow-2xl shadow-green-950/20 md:px-10">
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
-      <div class="col-span-2 md:col-span-2">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="brand-mark h-12 w-12">
-            {% if tournament and tournament.logo %}
-            <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}">
-            {% else %}
-            <span class="text-xl font-black text-white">A</span>
-            {% endif %}
-          </div>
-          <div>
-            <div class="font-heading font-bold text-lg">ADEIB U26</div>
-            <div class="text-gray-400 text-xs tracking-wider uppercase">Illara · Bénin</div>
-          </div>
-        </div>
-        <p class="max-w-sm text-base leading-relaxed text-gray-400">Association des Élèves et Étudiants d'Illara Béninoise. Un espace simple pour suivre le tournoi, les scores et les équipes.</p>
-      </div>
-      <div>
-        <h5 class="font-heading font-bold text-sm mb-4 text-gray-300 tracking-wide uppercase">Navigation</h5>
-        <ul class="space-y-2.5 text-base text-gray-400">
-          <li><a href="{% url 'home' %}"     class="hover:text-white transition-colors hover:translate-x-1 inline-block">Accueil</a></li>
-          <li><a href="{% url 'teams' %}"    class="hover:text-white transition-colors hover:translate-x-1 inline-block">Équipes</a></li>
-          <li><a href="{% url 'matches' %}"  class="hover:text-white transition-colors hover:translate-x-1 inline-block">Matchs</a></li>
-          <li><a href="{% url 'standings' %}" class="hover:text-white transition-colors hover:translate-x-1 inline-block">Classement</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5 class="font-heading font-bold text-sm mb-4 text-gray-300 tracking-wide uppercase">Tournoi</h5>
-        <ul class="space-y-2.5 text-base text-gray-400">
-          {% if tournament %}
-          {% if tournament.location %}<li class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-[#0d5c2e]"></i> {{ tournament.location }}</li>{% endif %}
-          {% if tournament.start_date %}<li class="flex items-center gap-2"><i class="fas fa-calendar text-[#0d5c2e]"></i> {{ tournament.start_date|date:"d/m/Y" }}</li>{% endif %}
-          {% endif %}
-          <li><a href="{% url 'bracket' %}" class="text-[#4ade80] hover:text-white transition-colors font-semibold">Tableau final →</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="mt-10 flex flex-col items-start justify-between gap-3 border-t border-gray-800 pt-6 text-sm text-gray-500 md:flex-row md:items-center">
-      <span class="font-heading">© {% now "Y" %} ADEIB — Tous droits réservés</span>
-      {% if user.is_staff %}<a href="{% url 'admin_dashboard' %}" class="hover:text-white transition-colors font-heading font-semibold">Administration</a>{% endif %}
-    </div>
-    </div>
+<!-- ── FOOTER ── -->
+<footer class="cl-footer">
+  <div class="page-shell-wide cl-footer-inner">
+    <a href="{% url 'home' %}" class="cl-logo">
+      <span class="cl-cup">Cup</span><span class="cl-legends">Legends</span>
+    </a>
+    <span>© {% now "Y" %} Cup Legends — Tournoi de football</span>
+    <span class="flex items-center gap-4">
+      <a href="{% url 'live' %}">Live</a>
+      <a href="{% url 'standings' %}">Classement</a>
+      {% if user.is_staff %}<a href="{% url 'admin_dashboard' %}">Admin</a>{% endif %}
+    </span>
   </div>
 </footer>
 
 <script src="{% static 'js/main.js' %}"></script>
 <script>
-  // Mobile menu toggle with smooth animation
   const mobileToggle = document.getElementById('mobileToggle');
   const mobileMenu = document.getElementById('mobileMenu');
-
   mobileToggle?.addEventListener('click', () => {
     const icon = mobileToggle.querySelector('i');
-    if (mobileMenu.classList.contains('show')) {
-      mobileMenu.classList.remove('show');
-      icon.classList.remove('fa-times');
-      icon.classList.add('fa-bars');
-    } else {
-      mobileMenu.classList.add('show');
-      icon.classList.remove('fa-bars');
-      icon.classList.add('fa-times');
-    }
+    mobileMenu.classList.toggle('show');
+    icon.classList.toggle('fa-bars');
+    icon.classList.toggle('fa-times');
   });
 
-  // Active nav link highlighting
+  // Lien de navigation actif
   const currentPath = window.location.pathname;
   document.querySelectorAll('[data-nav]').forEach(link => {
-    if (link.getAttribute('href') === currentPath) {
+    const href = link.getAttribute('href');
+    if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
       link.classList.add('active');
     }
   });
