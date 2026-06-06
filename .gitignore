@@ -12,6 +12,10 @@ venv/
 staticfiles/
 *.log
 
+# Base de données (ne pas committer : évite d'écraser la prod au déploiement)
+db.sqlite3
+*.sqlite3
+
 # Secrets (NE JAMAIS committer)
 .env
 
