@@ -52,6 +52,11 @@
     </nav>
 
     <div class="hidden md:flex items-center gap-2">
+      <a href="https://apk.e-droid.net/apk/app4070955-rk9clz.apk?v=1"
+         class="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-bold text-white transition hover:opacity-90"
+         download>
+        <i class="fab fa-android"></i> Télécharger l'app
+      </a>
       {% if user.is_staff %}
       <a href="{% url 'admin_dashboard' %}" class="cl-admin-link desktop">Admin</a>
       {% endif %}
@@ -72,6 +77,7 @@
       <a href="{% url 'live' %}"      data-nav>Live</a>
       <a href="{% url 'bracket' %}"   data-nav>Bracket</a>
       <a href="{% url 'statistics' %}" data-nav>Statistiques</a>
+      <a href="https://apk.e-droid.net/apk/app4070955-rk9clz.apk?v=1" download><i class="fab fa-android mr-2"></i>Télécharger l'app</a>
       {% if user.is_staff %}<a href="{% url 'admin_dashboard' %}" data-nav>Administration</a>{% endif %}
     </div>
   </div>
