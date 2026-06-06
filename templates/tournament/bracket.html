@@ -35,6 +35,7 @@
     <div class="flex gap-6 min-w-max items-start">
 
       <!-- QF column -->
+      {% if qf_matches %}
       <div class="flex flex-col gap-4 w-56">
         <div class="text-center mb-2">
           <span class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full text-white bg-black">Quarts de finale</span>
@@ -71,6 +72,7 @@
       <div class="flex flex-col justify-around self-stretch w-8 mt-12">
         {% for i in "12" %}<div class="flex-1 border-r-2 border-t-2 border-b-2 border-gray-200 rounded-r-lg my-4"></div>{% endfor %}
       </div>
+      {% endif %}
 
       <!-- SF column -->
       <div class="flex flex-col gap-4 w-56 mt-12">

@@ -722,23 +722,21 @@ def admin_add_goal(request, match_pk):
 @login_required
 @user_passes_test(is_admin)
 def admin_distribute_groups(request):
-    """Répartit automatiquement les équipes en poules de 4.
+    """Tirage au sort 100% aléatoire des équipes en poules de 4.
 
-    8 équipes -> 2 poules, 12 -> 3, 16 -> 4 ... Les équipes sont
-    classées par nombre de joueurs puis réparties en serpentin pour
-    équilibrer les poules.
+    Toutes les équipes du tournoi sont mélangées au hasard puis réparties
+    par paquets de 4 (poule A, B, C ...). On peut ajouter des équipes et
+    relancer le tirage à tout moment : la répartition est entièrement
+    recalculée.
     """
     import math
+    import random
     tournament = get_active_tournament()
     if not tournament:
         messages.error(request, 'Aucun tournoi actif.')
         return redirect('admin_dashboard')
 
-    teams = list(
-        Team.objects.filter(tournament=tournament)
-        .annotate(nb_players=Count('players'))
-        .order_by('-nb_players', 'name')
-    )
+    teams = list(Team.objects.filter(tournament=tournament))
     n = len(teams)
     if n < 4:
         messages.error(request, f'Il faut au moins 4 équipes (actuellement {n}).')
@@ -750,22 +748,18 @@ def admin_distribute_groups(request):
         messages.error(request, "Trop d'équipes : maximum 24 (6 poules de 4).")
         return redirect('admin_teams')
 
+    # Tirage au sort
+    random.shuffle(teams)
+
     groups = []
     for i in range(num_groups):
         g, _ = Group.objects.get_or_create(tournament=tournament, name=letters[i])
         g.bucket = []
         groups.append(g)
 
-    # Répartition serpentin (équilibrée)
-    forward = True
-    i = 0
-    while i < n:
-        row = groups if forward else list(reversed(groups))
-        for g in row:
-            if i < n:
-                g.bucket.append(teams[i])
-                i += 1
-        forward = not forward
+    # Répartition par paquets de 4 (la dernière poule prend le reste)
+    for idx, team in enumerate(teams):
+        groups[idx // 4].bucket.append(team)
 
     for g in groups:
         for t in g.bucket:
@@ -782,7 +776,7 @@ def admin_distribute_groups(request):
         if not g.teams.exists() and not g.matches.exists():
             g.delete()
 
-    messages.success(request, f'{n} équipes réparties dans {num_groups} poule(s) de 4.')
+    messages.success(request, f'Tirage effectué : {n} équipes réparties au hasard dans {num_groups} poule(s).')
     return redirect('admin_teams')
 
 
@@ -837,35 +831,51 @@ def admin_generate_knockout(request):
         messages.error(request, 'Aucun tournoi actif.')
         return redirect('admin_dashboard')
 
-    qualified = _get_qualified_teams(tournament)
-    if len(qualified) < 8:
-        messages.error(request, f'Seulement {len(qualified)} équipes qualifiées (8 nécessaires).')
+    per_group = tournament.qualifiers_per_group or 2
+    qualified = _get_qualified_teams(tournament, per_group)
+    total = len(qualified)
+    if total < 4:
+        messages.error(
+            request,
+            f'Seulement {total} équipe(s) qualifiée(s). Il en faut au moins 4 '
+            f'(joue les matchs de poule, ou augmente les qualifiés par poule).'
+        )
         return redirect('admin_dashboard')
 
-    # Create QF matches: A1 vs B3, B1 vs C3, C1 vs A3, best 3rd vs other
-    qf_pairs = [
-        (qualified.get('A1'), qualified.get('B3')),
-        (qualified.get('B1'), qualified.get('C3')),
-        (qualified.get('C1'), qualified.get('A3')),
-        (qualified.get('best3rd'), qualified.get('other3rd')),
-    ]
+    # Taille du tableau : 8 (quarts) si possible, sinon 4 (demies).
+    if total >= 8:
+        size = 8
+        # Têtes de série : 1v8, 4v5, 3v6, 2v7 -> 1 et 2 dans des moitiés opposées
+        pair_seeds = [(0, 7), (3, 4), (2, 5), (1, 6)]
+        first_round = 'QF'
+    else:
+        size = 4
+        pair_seeds = [(0, 3), (1, 2)]  # 1v4, 2v3
+        first_round = 'SF'
+
+    seeds = qualified[:size]
 
     KnockoutMatch.objects.filter(tournament=tournament).delete()
-    for i, (home, away) in enumerate(qf_pairs, 1):
+    for i, (home_idx, away_idx) in enumerate(pair_seeds, 1):
         KnockoutMatch.objects.create(
             tournament=tournament,
-            round='QF',
+            round=first_round,
             match_number=i,
-            home_team=home,
-            away_team=away,
+            home_team=seeds[home_idx],
+            away_team=seeds[away_idx],
         )
-    # Create empty SF and Final slots
-    for i in range(1, 3):
-        KnockoutMatch.objects.create(tournament=tournament, round='SF', match_number=i)
+    # Slots vides pour les tours suivants
+    if first_round == 'QF':
+        for i in range(1, 3):
+            KnockoutMatch.objects.create(tournament=tournament, round='SF', match_number=i)
     KnockoutMatch.objects.create(tournament=tournament, round='3RD', match_number=1)
     KnockoutMatch.objects.create(tournament=tournament, round='FINAL', match_number=1)
 
-    messages.success(request, 'Phase finale générée avec succès.')
+    msg = f'Phase finale générée : {size} qualifiés ({per_group} par poule).'
+    if total > size:
+        msg += (f' {total} équipes étaient qualifiables ; seules les {size} '
+                f'mieux classées entrent dans le tableau.')
+    messages.success(request, msg)
     return redirect('bracket')
 
 
@@ -925,27 +935,24 @@ def _check_predictions(match):
         board.update()
 
 
-def _get_qualified_teams(tournament):
-    qualified = {}
-    groups_thirds = []
+def _get_qualified_teams(tournament, per_group):
+    """Renvoie la liste ordonnée (tête de série en premier) des équipes
+    qualifiées : les `per_group` premières de chaque poule.
 
+    Le classement global place d'abord tous les 1ers de poule, puis tous
+    les 2es, etc. ; à rang de poule égal on départage aux points / diff.
+    """
+    ranked = []  # (rang_dans_poule, standing)
     for group in Group.objects.filter(tournament=tournament).order_by('name'):
-        standings = Standing.objects.filter(group=group).order_by('-points', '-goals_for')
-        teams = list(standings)
-        if len(teams) >= 1:
-            qualified[f'{group.name}1'] = teams[0].team
-        if len(teams) >= 2:
-            qualified[f'{group.name}2'] = teams[1].team
-        if len(teams) >= 3:
-            groups_thirds.append(teams[2])
+        standings = sorted(
+            Standing.objects.filter(group=group).select_related('team'),
+            key=lambda s: (-s.points, -s.goal_difference, -s.goals_for),
+        )
+        for rank, st in enumerate(standings[:per_group], start=1):
+            ranked.append((rank, st))
 
-    # Best 2 thirds
-    groups_thirds.sort(key=lambda s: (-s.points, -s.goal_difference, -s.goals_for))
-    if len(groups_thirds) >= 2:
-        qualified['best3rd'] = groups_thirds[0].team
-        qualified['other3rd'] = groups_thirds[1].team
-
-    return qualified
+    ranked.sort(key=lambda x: (x[0], -x[1].points, -x[1].goal_difference, -x[1].goals_for))
+    return [st.team for _, st in ranked]
 
 
 def _advance_knockout(match):

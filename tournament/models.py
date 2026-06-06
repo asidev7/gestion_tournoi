@@ -48,6 +48,11 @@ class Tournament(models.Model):
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='tournament/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    qualifiers_per_group = models.PositiveIntegerField(
+        default=2,
+        verbose_name='Qualifiés par poule',
+        help_text='Nombre d\'équipes qui sortent de chaque poule pour la phase finale.',
+    )
 
     def __str__(self):
         return self.name

@@ -9,8 +9,8 @@
     {% if user.is_staff %}
     <a href="{% url 'admin_distribute_groups' %}"
        class="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
-       onclick="return confirm('Répartir automatiquement les équipes en poules de 4 (classées par nombre de joueurs) ?');">
-      <i class="fas fa-shuffle"></i> Répartir en poules de 4
+       onclick="return confirm('Lancer le tirage au sort ? Les équipes seront réparties au hasard en poules de 4.');">
+      <i class="fas fa-shuffle"></i> Tirage au sort des poules
     </a>
     {% endif %}
   </div>

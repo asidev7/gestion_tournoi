@@ -20,10 +20,12 @@ class TeamRegistrationForm(forms.ModelForm):
 class TournamentForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'edition', 'start_date', 'end_date', 'location', 'description', 'logo']
+        fields = ['name', 'edition', 'start_date', 'end_date', 'location',
+                  'description', 'logo', 'qualifiers_per_group']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'qualifiers_per_group': forms.NumberInput(attrs={'min': 1, 'max': 4}),
         }
 
 
